@@ -1,0 +1,68 @@
+{
+  "name": "markserv",
+  "version": "2.0.0-beta.1",
+  "description": "Serve markdown files with live reload and beautiful rendering",
+  "features": {
+    "markdown": {
+      "enabled": true,
+      "plugins": [
+        "markdown-it-anchor",
+        "markdown-it-table-of-contents",
+        "markdown-it-emoji"
+      ]
+    },
+    "json": {
+      "enabled": true,
+      "editor": "vanilla-jsoneditor",
+      "theme": "dark"
+    },
+    "mlir": {
+      "enabled": true,
+      "visualization": "model-explorer"
+    }
+  },
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "email": "alice@example.com",
+      "roles": ["admin", "developer"]
+    },
+    {
+      "id": 2,
+      "name": "Bob",
+      "email": "bob@example.com",
+      "roles": ["developer"]
+    },
+    {
+      "id": 3,
+      "name": "Charlie",
+      "email": "charlie@example.com",
+      "roles": ["user"]
+    }
+  ],
+  "stats": {
+    "totalFiles": 156,
+    "linesOfCode": 8432,
+    "testCoverage": 87.5,
+    "lastUpdated": "2025-01-14T10:30:00Z"
+  },
+  "config": {
+    "port": 8080,
+    "address": "localhost",
+    "livereload": true,
+    "watch": true,
+    "verbose": false
+  },
+  "nested": {
+    "level1": {
+      "level2": {
+        "level3": {
+          "level4": {
+            "deep": "This is a deeply nested value to test tree rendering"
+          }
+        }
+      }
+    }
+  }
+}

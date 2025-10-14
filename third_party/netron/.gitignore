@@ -1,0 +1,12 @@
+.DS_Store
+.DS_Store?
+.claude
+.eslintcache
+.ruff_cache
+.specify
+dist/*
+node_modules/*
+test-results/*
+third_party/*
+yarn.lock
+*.pyc

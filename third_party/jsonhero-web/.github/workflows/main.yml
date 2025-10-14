@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/main.yml"
+      - "app/**/*.ts"
+      - "app/**/*.tsx"
+      - "public/*"
+      - "styles/*"
+      - "worker/*"
+      - "tests/*"
+      - "package.json"
+      - "package-lock.json"
+      - "remix.config.js"
+      - "tsconfig.json"
+      - "wrangler.toml"
+      - "remix.env.d.ts"
+      - "tailwind.config.js"
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Publish app
+        uses: cloudflare/wrangler-action@1.3.0
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          environment: "production"

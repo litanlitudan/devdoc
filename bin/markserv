@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+
+// This wrapper ensures ES modules work correctly when invoked via npm link
+// We need to handle the case where __dirname is not available in ES modules
+
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { spawn } from 'child_process';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Get the actual CLI script path (compiled from TypeScript)
+const cliPath = join(__dirname, '..', 'dist', 'cli.js');
+
+// Pass through all arguments to the actual CLI
+const args = process.argv.slice(2);
+
+// Spawn node with the CLI script
+const child = spawn(process.execPath, [cliPath, ...args], {
+  stdio: 'inherit',
+  env: process.env
+});
+
+// Pass through the exit code
+child.on('exit', (code) => {
+  process.exit(code || 0);
+});
+
+// Handle errors
+child.on('error', (err) => {
+  console.error('Failed to start markserv:', err);
+  process.exit(1);
+});

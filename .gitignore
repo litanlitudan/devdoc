@@ -1,0 +1,15 @@
+dist/
+types/
+*.log
+*.tmp
+.DS_Store
+node_modules/
+coverage/
+.nyc_output/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+package-lock.json
+tests/fixtures/onnx/

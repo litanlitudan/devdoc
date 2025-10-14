@@ -1,0 +1,23 @@
+# Local development Dockerfile with debug tools
+FROM node:18
+
+# Install development and debugging tools
+RUN apt-get update && apt-get install -y \
+    vim \
+    curl \
+    netcat \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev)
+RUN npm install
+
+# Expose ports for app and debugging
+EXPOSE 3000 9229
+
+# Development with debugger
+CMD ["node", "--inspect=0.0.0.0:9229", "server.js"]

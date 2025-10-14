@@ -1,0 +1,19 @@
+# tmp files
+__pycache__/
+build/
+dist/
+*.spec
+
+# onnx files
+*.onnx
+/test_onnx/
+/modified_onnx/
+
+# self maintained files
+gym/
+local_tmp/
+*ppt
+*pptx
+*.local.*
+README_pypi.md
+

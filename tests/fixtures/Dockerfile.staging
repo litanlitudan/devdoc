@@ -1,0 +1,23 @@
+# Staging environment Dockerfile
+FROM node:18-alpine
+
+# Install staging dependencies
+RUN apk add --no-cache git curl
+
+WORKDIR /app
+
+# Copy application
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+
+# Staging configuration
+ENV NODE_ENV=staging \
+    PORT=3000 \
+    LOG_LEVEL=debug
+
+EXPOSE 3000
+
+# Run application
+CMD ["node", "server.js"]

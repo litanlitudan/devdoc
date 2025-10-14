@@ -1,0 +1,56 @@
+{
+  "name": "model-explorer",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve model_explorer",
+    "build": "ng build model_explorer",
+    "build-npm": "./scripts/build_npm.sh",
+    "deploy": "./scripts/build_and_update_python_package.sh",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test model_explorer"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^20.1.2",
+    "@angular/cdk": "^20.1.2",
+    "@angular/common": "^20.1.2",
+    "@angular/compiler": "^20.1.2",
+    "@angular/core": "^20.1.2",
+    "@angular/elements": "^20.1.2",
+    "@angular/forms": "^20.1.2",
+    "@angular/material": "^20.1.2",
+    "@angular/platform-browser": "^20.1.2",
+    "@angular/platform-browser-dynamic": "^20.1.2",
+    "@angular/router": "^20.1.2",
+    "d3": "5.7.0",
+    "rxjs": "~7.8.0",
+    "safevalues": "^1.0.1",
+    "three": "0.134.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.15.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^20.1.1",
+    "@angular/cli": "^20.1.1",
+    "@angular/compiler-cli": "^20.1.2",
+    "@types/d3": "5.7.0",
+    "@types/jasmine": "~5.1.0",
+    "@types/three": "0.134.0",
+    "esbuild": "^0.25.0",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "rollup": "^4.21.3",
+    "typescript": "~5.8.3"
+  },
+  "overrides": {
+    "@types/d3-selection": "1.4.2"
+  },
+  "resolutions": {
+    "@types/d3-selection": "1.4.2"
+  }
+}

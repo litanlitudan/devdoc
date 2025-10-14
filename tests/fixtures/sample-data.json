@@ -1,0 +1,14 @@
+{
+  "name": "Test Data",
+  "version": "1.0.0",
+  "description": "Sample JSON file for testing the Editor button",
+  "features": [
+    "Interactive JSON editor",
+    "Syntax highlighting",
+    "Tree view"
+  ],
+  "metadata": {
+    "created": "2025-10-14",
+    "author": "markserv"
+  }
+}

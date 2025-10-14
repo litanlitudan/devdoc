@@ -1,0 +1,52 @@
+{
+    "name": "netron",
+    "productName": "Netron",
+    "author": {
+        "name": "Lutz Roeder",
+        "email": "lutzroeder@users.noreply.github.com",
+        "url": "https://www.lutzroeder.com"
+    },
+    "version": "8.6.7",
+    "date": "2025-10-03 14:38:04",
+    "description": "Visualizer for neural network, deep learning, and machine learning models",
+    "license": "MIT",
+    "repository": "lutzroeder/netron",
+    "type": "module",
+    "main": "source/app.js",
+    "scripts": {
+        "start": "node package.js start",
+        "server": "python package.py build start",
+        "clean": "node package.js clean",
+        "purge": "node package.js purge",
+        "install": "node package.js install",
+        "lint": "node package.js lint",
+        "build": "node package.js build",
+        "publish": "node package.js publish",
+        "version": "node package.js version",
+        "test": "node package.js test",
+        "validate": "node package.js validate",
+        "coverage": "node package.js coverage",
+        "analyze": "node package.js analyze",
+        "update": "node package.js update",
+        "pull": "node package.js pull"
+    },
+    "dependencies": {
+        "electron-updater": "6.6.8"
+    },
+    "devDependencies": {
+        "@electron/notarize": "3.1.0",
+        "@playwright/test": "1.55.1",
+        "electron": "38.2.1",
+        "electron-builder": "26.0.20",
+        "eslint": "9.37.0"
+    },
+    "build": {
+        "extends": "publish/electron-builder.json"
+    },
+    "nyc": {
+        "reporter": "json",
+        "report-dir": "dist/nyc/report",
+        "temp-dir": "dist/nyc/.nyc_output"
+    },
+    "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>{{title}}</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="{markserv}/templates/markserv.css">
+	<link rel="stylesheet" href="{markserv}/templates/highlight-js-github-gist.css">
+	<link rel="stylesheet" href="{markserv}/icons/icons.css">
+	<style>
+		/* Remove default list padding to align with footer */
+		.markdown-body ul {
+			padding-left: 0;
+			margin: 0;
+			list-style: none;
+		}
+
+		/* Style all list items (both with and without icons) */
+		.markdown-body li.icon,
+		.markdown-body li.isfile,
+		.markdown-body li.isfolder {
+			padding: 8px 0;
+			padding-right: 120px; /* Space for file size */
+			margin: 0;
+			position: relative;
+			padding-left: 40px; /* Space for icon/emoji */
+		}
+
+		/* Position icons */
+		.markdown-body li.icon:before {
+			position: absolute;
+			left: 8px;
+			top: 50%;
+			transform: translateY(-50%);
+		}
+
+		/* Ensure links don't interfere with layout */
+		.markdown-body li a {
+			text-decoration: none;
+			display: inline;
+			color: #24292e; /* Consistent dark color for all file names */
+		}
+
+		/* Optional: Add hover effect */
+		.markdown-body li a:hover {
+			text-decoration: underline;
+			color: #0366d6; /* Blue on hover */
+		}
+
+		/* File size styling - positioned absolutely to prevent layout shift */
+		.markdown-body li .file-size {
+			position: absolute;
+			right: 0;
+			top: 50%;
+			transform: translateY(-50%);
+			color: #666;
+			font-size: 0.85em;
+			font-family: monospace;
+			white-space: nowrap;
+		}
+
+		.upload-zone {
+			transition: all 0.3s ease;
+		}
+		.upload-zone.drag-over {
+			background: rgba(0, 150, 255, 0.1);
+			border: 2px dashed #0096ff;
+			border-radius: 8px;
+		}
+		.upload-progress {
+			display: none;
+			position: fixed;
+			bottom: 20px;
+			right: 20px;
+			background: white;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			padding: 20px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			min-width: 300px;
+			max-width: 400px;
+			z-index: 1000;
+		}
+		.upload-progress.active {
+			display: block;
+		}
+		.upload-item {
+			margin-bottom: 15px;
+		}
+		.upload-item:last-child {
+			margin-bottom: 0;
+		}
+		.upload-filename {
+			font-weight: bold;
+			margin-bottom: 5px;
+			word-break: break-all;
+		}
+		.progress-bar {
+			width: 100%;
+			height: 20px;
+			background: #f0f0f0;
+			border-radius: 10px;
+			overflow: hidden;
+		}
+		.progress-fill {
+			height: 100%;
+			background: linear-gradient(90deg, #4CAF50, #45a049);
+			transition: width 0.3s ease;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: white;
+			font-size: 12px;
+		}
+		.upload-status {
+			margin-top: 5px;
+			font-size: 12px;
+			color: #666;
+			display: flex;
+			justify-content: space-between;
+			flex-wrap: wrap;
+		}
+		.upload-stats {
+			display: flex;
+			gap: 10px;
+			font-size: 11px;
+			color: #888;
+		}
+		.upload-error {
+			color: #d32f2f;
+		}
+		.upload-success {
+			color: #388e3c;
+		}
+		.drop-indicator {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			background: rgba(0, 0, 0, 0.8);
+			color: white;
+			padding: 30px 50px;
+			border-radius: 10px;
+			font-size: 24px;
+			pointer-events: none;
+			opacity: 0;
+			transition: opacity 0.3s ease;
+			z-index: 999;
+		}
+		.drop-indicator.show {
+			opacity: 1;
+		}
+	</style>
+</head>
+<body class="dir">
+<article class="markdown-body upload-zone">
+<h1 class="icon folder isfolder">{{#each breadcrumbs}}<a href="{{href}}">{{text}}</a>{{/each}}</h1>
+{{{content}}}
+<footer>
+	<sup>
+		<hr>
+		{{countsText}} | PID: {{pid}}
+	</sup>
+</footer>
+</article>
+
+<!-- Upload progress indicator -->
+<div class="upload-progress" id="uploadProgress"></div>
+
+<!-- Drop indicator -->
+<div class="drop-indicator" id="dropIndicator">
+	📁 Drop files or folders here to upload
+</div>
+
+<script>
+(function() {
+	// Upload functionality
+	const uploadZone = document.querySelector('.upload-zone');
+	const uploadProgress = document.getElementById('uploadProgress');
+	const dropIndicator = document.getElementById('dropIndicator');
+	let activeUploads = new Map();
+
+	// Prevent default drag behaviors
+	['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+		document.addEventListener(eventName, preventDefaults, false);
+		uploadZone.addEventListener(eventName, preventDefaults, false);
+	});
+
+	function preventDefaults(e) {
+		e.preventDefault();
+		e.stopPropagation();
+	}
+
+	// Highlight drop area when item is dragged over it
+	['dragenter', 'dragover'].forEach(eventName => {
+		uploadZone.addEventListener(eventName, highlight, false);
+	});
+
+	['dragleave', 'drop'].forEach(eventName => {
+		uploadZone.addEventListener(eventName, unhighlight, false);
+	});
+
+	function highlight(e) {
+		uploadZone.classList.add('drag-over');
+		dropIndicator.classList.add('show');
+	}
+
+	function unhighlight(e) {
+		uploadZone.classList.remove('drag-over');
+		dropIndicator.classList.remove('show');
+	}
+
+	// Handle dropped files
+	uploadZone.addEventListener('drop', handleDrop, false);
+
+	async function handleDrop(e) {
+		const dt = e.dataTransfer;
+		const items = dt.items;
+
+		if (items) {
+			// Use DataTransferItemList interface to handle both files and folders
+			const entries = [];
+			for (let i = 0; i < items.length; i++) {
+				const item = items[i];
+				if (item.kind === 'file') {
+					const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : item.getAsEntry();
+					if (entry) {
+						entries.push(entry);
+					}
+				}
+			}
+
+			// Process all entries (files and folders)
+			for (const entry of entries) {
+				await processEntry(entry, '');
+			}
+		} else {
+			// Fallback to old method for browsers that don't support webkitGetAsEntry
+			const files = dt.files;
+			handleFiles(files, '');
+		}
+	}
+
+	async function processEntry(entry, path) {
+		if (entry.isFile) {
+			// Handle file
+			entry.file(function(file) {
+				uploadFile(file, path);
+			});
+		} else if (entry.isDirectory) {
+			// Handle directory
+			const dirPath = path ? path + '/' + entry.name : entry.name;
+			const dirReader = entry.createReader();
+
+			// Read all entries in the directory
+			const readEntries = () => {
+				return new Promise((resolve, reject) => {
+					dirReader.readEntries(function(entries) {
+						resolve(entries);
+					}, reject);
+				});
+			};
+
+			// Read entries in batches (readEntries may not return all at once)
+			let allEntries = [];
+			let entries;
+			do {
+				entries = await readEntries();
+				allEntries = allEntries.concat(entries);
+			} while (entries.length > 0);
+
+			// Process all entries in this directory
+			for (const subEntry of allEntries) {
+				await processEntry(subEntry, dirPath);
+			}
+		}
+	}
+
+	function handleFiles(files, relativePath = '') {
+		([...files]).forEach(file => uploadFile(file, relativePath));
+	}
+
+	function uploadFile(file, relativePath = '') {
+		const uploadId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+		// Determine display name with path
+		const displayName = relativePath ? relativePath + '/' + file.name : file.name;
+
+		// Create progress UI
+		const progressItem = createProgressItem(displayName, uploadId, file.size);
+		uploadProgress.appendChild(progressItem);
+		uploadProgress.classList.add('active');
+
+		// Store upload info with timing
+		activeUploads.set(uploadId, {
+			file: file,
+			element: progressItem,
+			startTime: Date.now(),
+			lastTime: Date.now(),
+			lastLoaded: 0,
+			totalSize: file.size
+		});
+
+		// Create FormData
+		const formData = new FormData();
+		formData.append('file', file);
+
+		// Include the relative path if uploading from a folder
+		if (relativePath) {
+			formData.append('relativePath', relativePath);
+		}
+
+		// Get current directory path from URL
+		const currentPath = window.location.pathname;
+
+		// Create XMLHttpRequest for progress tracking
+		const xhr = new XMLHttpRequest();
+
+		// Update progress
+		xhr.upload.addEventListener('progress', function(e) {
+			if (e.lengthComputable) {
+				const percentComplete = (e.loaded / e.total) * 100;
+				updateProgress(uploadId, percentComplete, e.loaded, e.total);
+			}
+		});
+
+		// Handle completion
+		xhr.addEventListener('load', function() {
+			if (xhr.status === 200) {
+				updateStatus(uploadId, 'success', 'Upload complete', file.size, file.size);
+				// Reload the page after a short delay to show the new file
+				setTimeout(() => {
+					window.location.reload();
+				}, 1000);
+			} else {
+				const error = xhr.responseText || 'Upload failed';
+				updateStatusMessage(uploadId, 'error', error);
+			}
+			cleanupUpload(uploadId);
+		});
+
+		// Handle errors
+		xhr.addEventListener('error', function() {
+			updateStatusMessage(uploadId, 'error', 'Upload failed');
+			cleanupUpload(uploadId);
+		});
+
+		// Handle abort
+		xhr.addEventListener('abort', function() {
+			updateStatusMessage(uploadId, 'error', 'Upload cancelled');
+			cleanupUpload(uploadId);
+		});
+
+		// Send request
+		xhr.open('POST', currentPath + '?upload=true');
+		xhr.send(formData);
+	}
+
+	function createProgressItem(filename, uploadId, totalSize) {
+		const div = document.createElement('div');
+		div.className = 'upload-item';
+		div.id = 'upload_' + uploadId;
+		div.innerHTML = `
+			<div class="upload-filename">${escapeHtml(filename)}</div>
+			<div class="progress-bar">
+				<div class="progress-fill" style="width: 0%">0%</div>
+			</div>
+			<div class="upload-status">
+				<span class="status-text">Uploading...</span>
+				<div class="upload-stats">
+					<span class="upload-size">0 / ${formatSize(totalSize)}</span>
+					<span class="upload-speed">0 KB/s</span>
+					<span class="upload-eta">calculating...</span>
+				</div>
+			</div>
+		`;
+		return div;
+	}
+
+	function formatSize(bytes) {
+		if (bytes === 0) return '0 B';
+		const k = 1024;
+		const sizes = ['B', 'KB', 'MB', 'GB'];
+		const i = Math.floor(Math.log(bytes) / Math.log(k));
+		return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+	}
+
+	function formatTime(seconds) {
+		if (seconds < 60) return Math.round(seconds) + 's';
+		if (seconds < 3600) return Math.round(seconds / 60) + 'm ' + Math.round(seconds % 60) + 's';
+		return Math.round(seconds / 3600) + 'h ' + Math.round((seconds % 3600) / 60) + 'm';
+	}
+
+	function updateProgress(uploadId, percent, loaded, total) {
+		const upload = activeUploads.get(uploadId);
+		if (upload) {
+			const now = Date.now();
+			const timeDiff = (now - upload.lastTime) / 1000; // seconds
+			const bytesDiff = loaded - upload.lastLoaded;
+
+			// Update progress bar
+			const progressFill = upload.element.querySelector('.progress-fill');
+			progressFill.style.width = percent + '%';
+			progressFill.textContent = Math.round(percent) + '%';
+
+			// Calculate speed (bytes per second)
+			let speed = 0;
+			if (timeDiff > 0) {
+				speed = bytesDiff / timeDiff;
+			}
+
+			// Calculate ETA (estimated time remaining)
+			let eta = 'calculating...';
+			if (speed > 0) {
+				const remaining = total - loaded;
+				const etaSeconds = remaining / speed;
+				eta = formatTime(etaSeconds);
+			}
+
+			// Update stats
+			const sizeElement = upload.element.querySelector('.upload-size');
+			const speedElement = upload.element.querySelector('.upload-speed');
+			const etaElement = upload.element.querySelector('.upload-eta');
+
+			if (sizeElement) sizeElement.textContent = `${formatSize(loaded)} / ${formatSize(total)}`;
+			if (speedElement) speedElement.textContent = formatSize(speed) + '/s';
+			if (etaElement) etaElement.textContent = eta;
+
+			// Update tracking
+			upload.lastTime = now;
+			upload.lastLoaded = loaded;
+		}
+	}
+
+	function updateStatus(uploadId, status, message, loaded, total) {
+		const upload = activeUploads.get(uploadId);
+		if (upload) {
+			const statusText = upload.element.querySelector('.status-text');
+			const statusElement = upload.element.querySelector('.upload-status');
+			const statsElement = upload.element.querySelector('.upload-stats');
+
+			if (statusText) {
+				statusText.textContent = message;
+				statusText.className = 'status-text upload-' + status;
+			}
+
+			// Update final stats
+			if (status === 'success' && statsElement) {
+				const totalTime = (Date.now() - upload.startTime) / 1000;
+				const avgSpeed = total / totalTime;
+				statsElement.innerHTML = `
+					<span class="upload-size">${formatSize(total)}</span>
+					<span class="upload-speed">${formatSize(avgSpeed)}/s avg</span>
+					<span class="upload-eta">${formatTime(totalTime)}</span>
+				`;
+			}
+		}
+	}
+
+	function updateStatusMessage(uploadId, status, message) {
+		const upload = activeUploads.get(uploadId);
+		if (upload) {
+			const statusText = upload.element.querySelector('.status-text');
+			if (statusText) {
+				statusText.textContent = message;
+				statusText.className = 'status-text upload-' + status;
+			}
+		}
+	}
+
+	function cleanupUpload(uploadId) {
+		// Remove from active uploads after a delay
+		setTimeout(() => {
+			activeUploads.delete(uploadId);
+			if (activeUploads.size === 0) {
+				// Hide progress panel when all uploads complete
+				setTimeout(() => {
+					uploadProgress.classList.remove('active');
+					uploadProgress.innerHTML = '';
+				}, 3000);
+			}
+		}, 3000);
+	}
+
+	function escapeHtml(text) {
+		const div = document.createElement('div');
+		div.textContent = text;
+		return div.innerHTML;
+	}
+})();
+</script>
+</body>
+</html>

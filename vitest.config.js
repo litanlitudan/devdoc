@@ -1,0 +1,17 @@
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+	test: {
+		globals: true,
+		environment: 'node',
+		coverage: {
+			provider: 'v8',
+			reporter: ['text', 'lcov', 'html'],
+			exclude: ['node_modules/', 'tests/', 'scripts/', '*.config.js'],
+		},
+		include: ['tests/**/*.test.js', 'tests/**/*.test.modern.js'],
+		// Migrate from AVA configuration
+		threads: true,
+		isolate: true,
+	},
+})

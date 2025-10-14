@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>{{title}}</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="{markserv}/templates/markserv.css">
+	<link rel="stylesheet" href="{markserv}/templates/highlight-js-github-gist.css">
+	<!-- Syntax highlighting with all common languages -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/diff.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dart.min.js"></script>
+	<script type="text/javascript" id="MathJax-script" async
+	      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+	       </script>
+	<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+	<style>
+		/* Copy button for code blocks */
+		.code-block-wrapper {
+			position: relative;
+		}
+
+		.copy-code-button {
+			position: absolute;
+			top: 8px;
+			right: 8px;
+			padding: 6px 12px;
+			font-size: 12px;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+			line-height: 1.5;
+			color: #24292f;
+			background-color: #f6f8fa;
+			border: 1px solid rgba(27, 31, 36, 0.15);
+			border-radius: 6px;
+			cursor: pointer;
+			opacity: 0;
+			transition: opacity 0.2s, background-color 0.2s;
+			z-index: 10;
+		}
+
+		.code-block-wrapper:hover .copy-code-button {
+			opacity: 1;
+		}
+
+		.copy-code-button:hover {
+			background-color: #f3f4f6;
+			border-color: rgba(27, 31, 36, 0.25);
+		}
+
+		.copy-code-button:active {
+			background-color: #e1e4e8;
+		}
+
+		.copy-code-button.copied {
+			color: #0969da;
+			border-color: #0969da;
+		}
+
+		/* Add transition for width changes */
+		body {
+			transition: width 0.3s ease;
+		}
+
+		/* Expanded mode - wider but still centered */
+		body.expanded {
+			width: 1400px !important;
+			max-width: 95% !important;
+		}
+
+		/* Ensure proper centering in all modes */
+		body {
+			margin-left: auto !important;
+			margin-right: auto !important;
+		}
+
+		/* IMPORTANT: Keep ALL content elements at exact same size in both modes */
+		body.expanded .markdown-body {
+			/* Preserve the same font size and line height */
+			font-size: 16px !important;
+			line-height: 1.5 !important;
+		}
+
+		/* Ensure ALL text elements maintain consistent sizing EXCEPT header */
+		body.expanded .markdown-body > *:not(header) {
+			/* Prevent any scaling - maintain exact same dimensions */
+			font-size: inherit !important;
+			line-height: inherit !important;
+		}
+
+		/* Code blocks - maintain exact same styling */
+		body.expanded .markdown-body pre {
+			font-size: 13.6px !important; /* Same as normal mode */
+			line-height: 1.45 !important;
+			padding: 16px !important;
+			margin: 16px 0 !important;
+		}
+
+		body.expanded .markdown-body code {
+			font-size: 85% !important; /* Same as normal mode */
+			padding: 0.2em 0.4em !important;
+			margin: 0 !important;
+		}
+
+		/* Code inside pre blocks */
+		body.expanded .markdown-body pre code {
+			font-size: 100% !important; /* Inherit from pre */
+			padding: 0 !important;
+		}
+
+		/* Tables - maintain exact same cell sizing */
+		body.expanded .markdown-body table {
+			font-size: 16px !important;
+		}
+
+		body.expanded .markdown-body table th,
+		body.expanded .markdown-body table td {
+			padding: 6px 13px !important;
+			line-height: 1.5 !important;
+		}
+
+		/* Headings - maintain exact same sizes */
+		body.expanded .markdown-body h1 {
+			font-size: 2em !important;
+			line-height: 1.25 !important;
+			margin: 24px 0 16px !important;
+		}
+
+		body.expanded .markdown-body h2 {
+			font-size: 1.5em !important;
+			line-height: 1.25 !important;
+			margin: 24px 0 16px !important;
+		}
+
+		body.expanded .markdown-body h3 {
+			font-size: 1.25em !important;
+			line-height: 1.25 !important;
+			margin: 24px 0 16px !important;
+		}
+
+		body.expanded .markdown-body h4 {
+			font-size: 1em !important;
+			line-height: 1.25 !important;
+			margin: 24px 0 16px !important;
+		}
+
+		body.expanded .markdown-body h5 {
+			font-size: 0.875em !important;
+			line-height: 1.25 !important;
+			margin: 24px 0 16px !important;
+		}
+
+		body.expanded .markdown-body h6 {
+			font-size: 0.85em !important;
+			line-height: 1.25 !important;
+			margin: 24px 0 16px !important;
+		}
+
+		/* Lists - maintain exact same spacing */
+		body.expanded .markdown-body ul,
+		body.expanded .markdown-body ol {
+			padding-left: 2em !important;
+		}
+
+		body.expanded .markdown-body li {
+			line-height: 1.5 !important;
+		}
+
+		/* Blockquotes - maintain exact same styling */
+		body.expanded .markdown-body blockquote {
+			padding: 0 1em !important;
+			font-size: 16px !important;
+			line-height: 1.5 !important;
+		}
+
+		/* Images - maintain same max widths */
+		body.expanded .markdown-body img {
+			max-width: 100% !important;
+			height: auto !important;
+		}
+
+		/* Horizontal rules */
+		body.expanded .markdown-body hr {
+			height: 0.25em !important;
+			margin: 24px 0 !important;
+		}
+
+		/* Ensure padding stays consistent */
+		body.expanded .markdown-body {
+			padding: 30px !important; /* Same as normal mode */
+		}
+
+		/* Ensure header elements maintain exact same size in expanded mode */
+		body.expanded .markdown-body header {
+			font-size: 16px !important; /* Force same size as normal mode */
+		}
+
+		body.expanded .markdown-body header sup {
+			font-size: 12px !important; /* Keep the same small size */
+			line-height: 1.6 !important;
+			color: #586069 !important;
+		}
+
+		body.expanded .markdown-body header a {
+			font-size: 12px !important; /* Same as sup */
+		}
+
+		body.expanded .markdown-body .download-link {
+			font-size: 12px !important; /* Maintain same size */
+		}
+
+		/* Ensure header separator maintains same style, only width changes */
+		body.expanded .markdown-body header hr {
+			height: 0 !important;
+			padding: 0 !important;
+			margin: 10px 0 0 0 !important;
+			background-color: transparent !important;
+			border: 0 !important;
+			border-bottom: 1px solid #e1e4e8 !important;
+			/* Width naturally adjusts with container */
+		}
+
+		/* Ensure toggle button maintains exact same size in expanded mode */
+		body.expanded .width-toggle {
+			padding: 3px 10px !important;
+			font-size: 12px !important;
+		}
+
+		body.expanded .width-toggle svg {
+			width: 14px !important;
+			height: 14px !important;
+		}
+
+		/* Responsive handling for expanded mode */
+		@media screen and (max-width: 1440px) {
+			body.expanded {
+				width: 95% !important;
+			}
+		}
+
+		/* Keep responsive behavior for smaller screens */
+		@media screen and (max-width: 767px) {
+			body.expanded {
+				width: auto !important;
+			}
+			body.expanded .markdown-body {
+				padding: 10px !important; /* Keep mobile padding */
+			}
+		}
+
+		/* Toggle button styles */
+		.width-toggle {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			margin-left: 10px;
+			cursor: pointer;
+			padding: 3px 10px;
+			border: 1px solid #d1d5da;
+			border-radius: 6px;
+			background: #f6f8fa;
+			font-size: 12px;
+			color: #24292e;
+			vertical-align: middle;
+			user-select: none;
+			transition: all 0.2s ease;
+		}
+
+		.width-toggle:hover {
+			background: #e1e4e8;
+			border-color: #c1c7cd;
+			transform: translateY(-1px);
+		}
+
+		.width-toggle:active {
+			transform: translateY(0);
+		}
+
+		/* Different color but same size for active state */
+		.width-toggle.active {
+			background: #0969da;
+			color: white;
+			border-color: #0860ca;
+			/* Ensure size remains identical */
+			padding: 3px 10px;
+			font-size: 12px;
+		}
+
+		.width-toggle.active:hover {
+			background: #0860ca;
+			border-color: #0757b8;
+			transform: translateY(-1px);
+		}
+
+		.width-toggle svg {
+			width: 14px;
+			height: 14px;
+			fill: currentColor;
+		}
+
+		/* Action buttons (visualize, editor) - shared base styles */
+		.visualize-button,
+		.json-editor-button {
+			display: none; /* Hidden by default */
+			align-items: center;
+			gap: 4px;
+			margin-left: 10px;
+			cursor: pointer;
+			padding: 3px 10px;
+			font-size: 12px;
+			background: #f6f8fa;
+			color: #24292f;
+			border: 1px solid #d0d7de;
+			border-radius: 6px;
+			text-decoration: none;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+			vertical-align: middle;
+			user-select: none;
+			transition: all 0.2s ease;
+		}
+
+		.visualize-button:active,
+		.json-editor-button:active {
+			transform: translateY(0);
+		}
+
+		.visualize-button svg,
+		.json-editor-button svg {
+			width: 14px;
+			height: 14px;
+			fill: currentColor;
+		}
+
+		/* Visualize button - purple hover */
+		.visualize-button:hover {
+			background: #667eea;
+			color: white;
+			border-color: #5568d3;
+			transform: translateY(-1px);
+		}
+
+		/* JSON Editor button - green hover */
+		.json-editor-button:hover {
+			background: #2ea043;
+			color: white;
+			border-color: #2c974b;
+			transform: translateY(-1px);
+		}
+
+		/* Show buttons based on file type */
+		body[data-file-type="mlir"] .visualize-button,
+		body[data-file-type="json"] .json-editor-button {
+			display: inline-flex;
+		}
+
+		/* Heading anchor links */
+		.markdown-body h1,
+		.markdown-body h2,
+		.markdown-body h3,
+		.markdown-body h4,
+		.markdown-body h5,
+		.markdown-body h6 {
+			position: relative;
+			cursor: pointer;
+			/* Add scroll margin to prevent heading from being at the very top when linked */
+			scroll-margin-top: 60px;
+		}
+
+		.markdown-body h1:hover,
+		.markdown-body h2:hover,
+		.markdown-body h3:hover,
+		.markdown-body h4:hover,
+		.markdown-body h5:hover,
+		.markdown-body h6:hover {
+			color: #0366d6;
+		}
+
+		.heading-anchor {
+			position: absolute;
+			left: -1.2em;
+			opacity: 0;
+			transition: opacity 0.2s ease;
+			color: #0366d6;
+			text-decoration: none;
+			font-weight: normal;
+			line-height: inherit;
+			padding-right: 0.5em;
+		}
+
+		.markdown-body h1:hover .heading-anchor,
+		.markdown-body h2:hover .heading-anchor,
+		.markdown-body h3:hover .heading-anchor,
+		.markdown-body h4:hover .heading-anchor,
+		.markdown-body h5:hover .heading-anchor,
+		.markdown-body h6:hover .heading-anchor {
+			opacity: 1;
+		}
+
+		/* Copy notification */
+		.copy-notification {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			background: #0366d6;
+			color: white;
+			padding: 8px 16px;
+			border-radius: 4px;
+			font-size: 14px;
+			z-index: 10000;
+			opacity: 0;
+			transition: opacity 0.3s ease;
+			pointer-events: none;
+		}
+
+		.copy-notification.show {
+			opacity: 1;
+		}
+
+		.download-link {
+			color: #0366d6;
+			text-decoration: none;
+		}
+		.download-link:hover {
+			text-decoration: underline;
+		}
+		/* Set explicit base size for header to prevent inheritance */
+		header {
+			margin-bottom: 20px;
+			padding-bottom: 10px;
+			font-size: 16px !important; /* Base size, don't inherit from .markdown-body */
+		}
+		header sup {
+			line-height: 1.6;
+			font-size: 12px !important; /* Fixed small size */
+			color: #586069;
+		}
+		/* Header separator - override markdown-body hr styles */
+		.markdown-body header hr {
+			height: 0 !important;
+			padding: 0 !important;
+			margin: 10px 0 0 0 !important;
+			background-color: transparent !important;
+			border: 0 !important;
+			border-bottom: 1px solid #e1e4e8 !important;
+		}
+
+		/* Log output container - terminal-style with consistent sizing */
+		.markdown-body .log-output-container {
+			background: #1a1b26;
+			border-radius: 8px;
+			padding: 16px !important; /* Force fixed padding */
+			font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace !important;
+			font-size: 13px !important; /* Fixed size */
+			line-height: 1.6 !important; /* Fixed line height */
+			overflow-x: auto;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+			border: 1px solid #2d2e3f;
+			margin: 16px 0 !important; /* Force fixed margin */
+		}
+
+		.markdown-body .log-output-header {
+			border-bottom: 1px solid #2d2e3f;
+			padding-bottom: 8px;
+			margin-bottom: 12px;
+			color: #565869;
+			font-size: 11px !important; /* Fixed small size */
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.markdown-body .log-output-title {
+			color: #3b3c4f;
+		}
+
+		.markdown-body .log-output-content {
+			margin: 0;
+			padding: 0;
+			background: transparent;
+			overflow-x: auto;
+		}
+
+		.markdown-body .log-output-code {
+			display: block;
+			color: #c0caf5;
+			background: transparent;
+			font-size: 13px !important; /* Match container */
+			line-height: 1.6 !important; /* Match container */
+		}
+
+		/* Override inherited 16px from expanded mode with log's fixed 13px */
+		/* Use higher specificity to ensure it overrides .markdown-body > * rule */
+		body.expanded .markdown-body > .log-output-container {
+			font-size: 13px !important; /* Override the inherited 16px */
+			line-height: 1.6 !important;
+			padding: 16px !important;
+			margin: 16px 0 !important;
+			font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace !important;
+		}
+
+		body.expanded .markdown-body .log-output-header {
+			font-size: 11px !important;
+			line-height: 1.6 !important;
+			padding-bottom: 8px !important;
+			margin-bottom: 12px !important;
+		}
+
+		body.expanded .markdown-body .log-output-content {
+			margin: 0 !important;
+			padding: 0 !important;
+		}
+
+		body.expanded .markdown-body .log-output-code {
+			font-size: 13px !important;
+			line-height: 1.6 !important;
+		}
+
+		/* Prevent all child elements from inheriting the 16px from .markdown-body */
+		body.expanded .markdown-body .log-output-container * {
+			font-size: inherit !important; /* Inherit from .log-output-container (13px), not .markdown-body (16px) */
+			line-height: inherit !important;
+		}
+
+		/* Re-apply specific sizes to header and code with higher specificity */
+		body.expanded .markdown-body .log-output-container .log-output-header {
+			font-size: 11px !important;
+			line-height: 1.6 !important;
+		}
+
+		body.expanded .markdown-body .log-output-container .log-output-code {
+			font-size: 13px !important;
+			line-height: 1.6 !important;
+		}
+	</style>
+</head>
+<body>
+<article class="markdown-body">
+<header><sup><a href="{{filePath}}?download=true" class="download-link" download="{{fileName}}">⬇ Download</a> &nbsp;|&nbsp; <a href="{{parentDir}}" class="download-link">📁 Folder</a> &nbsp;|&nbsp; Last Modified: {{lastModified}} &nbsp;|&nbsp; PID: {{pid}}
+<span class="width-toggle" id="widthToggle" title="Toggle expanded view">
+	<svg viewBox="0 0 16 16">
+		<path d="M3.5 5a.5.5 0 00-.5.5v5c0 .28.22.5.5.5h9a.5.5 0 00.5-.5v-5a.5.5 0 00-.5-.5h-9zM2 5.5C2 4.67 2.67 4 3.5 4h9c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5h-9A1.5 1.5 0 012 10.5v-5z"/>
+		<path d="M1 8a.75.75 0 01.75-.75h2.5a.75.75 0 010 1.5h-2.5A.75.75 0 011 8zm10.75-.75a.75.75 0 000 1.5h2.5a.75.75 0 000-1.5h-2.5z"/>
+	</svg>
+	<span id="toggleText">Expand</span>
+</span>
+<a href="#" class="visualize-button" id="visualizeButton" title="Visualize dataflow graph with Model Explorer">
+	<svg viewBox="0 0 16 16">
+		<path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"/>
+	</svg>
+	<span>Visualize</span>
+</a>
+<a href="#" class="json-editor-button" id="jsonEditorButton" title="Open in interactive JSON editor">
+	<svg viewBox="0 0 16 16">
+		<path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h11A1.5 1.5 0 0 1 15 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zm1.5-.5a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-11zm1 3.5a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75zm4 0a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75zm-4 3a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75zm4 0a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75z"/>
+	</svg>
+	<span>Editor</span>
+</a></sup>
+<hr></header>
+{{{content}}}
+</article>
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		// Initialize Mermaid
+		mermaid.initialize({
+			startOnLoad: true,
+			theme: 'default',
+			securityLevel: 'loose'
+		});
+
+		// Initialize highlight.js for code blocks
+		window.addEventListener('load', function() {
+			if (typeof hljs !== 'undefined') {
+				// Apply highlighting to all code blocks
+				document.querySelectorAll('pre code[class*="language-"]').forEach((block) => {
+					// Skip plaintext and MLIR (MLIR is already highlighted server-side)
+					if (block.className.includes('language-plaintext') || block.className.includes('language-mlir')) {
+						return;
+					}
+
+					// Get the text content (this will unescape HTML entities)
+					const code = block.textContent || block.innerText;
+
+					// Detect the language from the class
+					const langMatch = block.className.match(/language-(\w+)/);
+					const language = langMatch ? langMatch[1] : null;
+
+					if (language) {
+						try {
+							// Apply highlighting
+							const result = hljs.highlight(code, { language: language });
+							block.innerHTML = result.value;
+						} catch(e) {
+							// If language not supported, try auto-detection
+							try {
+								const result = hljs.highlightAuto(code);
+								block.innerHTML = result.value;
+							} catch(e2) {
+								console.log('Failed to highlight:', e2);
+							}
+						}
+					}
+				});
+			}
+		});
+
+		// Add copy functionality to existing heading anchor links generated by markdown-it-anchor
+		function addHeadingCopyFunctionality() {
+			const headings = document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6');
+
+			headings.forEach((heading) => {
+				// markdown-it-anchor already created the ID and anchor link
+				const id = heading.id;
+				if (!id) return;
+
+				// Find the anchor link within the heading
+				const anchorLink = heading.querySelector('a.header-anchor');
+				if (!anchorLink) return;
+
+				// Only copy when clicking the anchor link icon, not the heading text
+				anchorLink.addEventListener('click', function(e) {
+					e.preventDefault();
+					const url = `${window.location.origin}${window.location.pathname}#${id}`;
+					copyToClipboard(url);
+					// Update URL hash without scrolling
+					history.replaceState(null, null, `#${id}`);
+				});
+			});
+		}
+
+		// Copy to clipboard function
+		function copyToClipboard(text) {
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(text).then(function() {
+					showCopyNotification('Link copied to clipboard!');
+				}).catch(function() {
+					fallbackCopyToClipboard(text);
+				});
+			} else {
+				fallbackCopyToClipboard(text);
+			}
+		}
+
+		// Fallback copy method for older browsers
+		function fallbackCopyToClipboard(text) {
+			const textarea = document.createElement('textarea');
+			textarea.value = text;
+			textarea.style.position = 'fixed';
+			textarea.style.left = '-9999px';
+			document.body.appendChild(textarea);
+			textarea.focus();
+			textarea.select();
+
+			try {
+				const successful = document.execCommand('copy');
+				if (successful) {
+					showCopyNotification('Link copied to clipboard!');
+				} else {
+					showCopyNotification('Failed to copy link');
+				}
+			} catch (err) {
+				showCopyNotification('Copy not supported in this browser');
+			}
+
+			document.body.removeChild(textarea);
+		}
+
+		// Show copy notification
+		function showCopyNotification(message) {
+			let notification = document.querySelector('.copy-notification');
+			if (!notification) {
+				notification = document.createElement('div');
+				notification.className = 'copy-notification';
+				document.body.appendChild(notification);
+			}
+
+			notification.textContent = message;
+			notification.classList.add('show');
+
+			setTimeout(() => {
+				notification.classList.remove('show');
+			}, 2000);
+		}
+
+		// Initialize heading copy functionality
+		addHeadingCopyFunctionality();
+
+		// Add copy buttons to code blocks
+		function addCopyButtonsToCodeBlocks() {
+			// Handle regular code blocks (pre > code, not line-numbered)
+			const regularCodeBlocks = document.querySelectorAll('.markdown-body pre:not(.code-block-wrapper pre) > code');
+
+			regularCodeBlocks.forEach(codeBlock => {
+				const pre = codeBlock.parentElement;
+
+				// Skip if already wrapped or if it's part of a code-block-container
+				if (pre.parentElement.classList.contains('code-block-wrapper') ||
+				    pre.closest('.code-block-container')) {
+					return;
+				}
+
+				// Create wrapper
+				const wrapper = document.createElement('div');
+				wrapper.className = 'code-block-wrapper';
+
+				// Create copy button
+				const copyButton = document.createElement('button');
+				copyButton.className = 'copy-code-button';
+				copyButton.textContent = 'Copy';
+				copyButton.setAttribute('aria-label', 'Copy code to clipboard');
+
+				// Copy functionality with fallback
+				copyButton.addEventListener('click', async () => {
+					try {
+						const text = codeBlock.textContent;
+
+						// Try modern clipboard API first
+						if (navigator.clipboard && navigator.clipboard.writeText) {
+							await navigator.clipboard.writeText(text);
+						} else {
+							// Fallback for older browsers or non-secure contexts
+							const textarea = document.createElement('textarea');
+							textarea.value = text;
+							textarea.style.position = 'fixed';
+							textarea.style.opacity = '0';
+							document.body.appendChild(textarea);
+							textarea.select();
+							document.execCommand('copy');
+							document.body.removeChild(textarea);
+						}
+
+						// Visual feedback
+						copyButton.textContent = 'Copied!';
+						copyButton.classList.add('copied');
+
+						setTimeout(() => {
+							copyButton.textContent = 'Copy';
+							copyButton.classList.remove('copied');
+						}, 2000);
+					} catch (err) {
+						console.error('Failed to copy code:', err);
+						copyButton.textContent = 'Failed';
+						setTimeout(() => {
+							copyButton.textContent = 'Copy';
+						}, 2000);
+					}
+				});
+
+				// Wrap the pre element
+				pre.parentNode.insertBefore(wrapper, pre);
+				wrapper.appendChild(pre);
+				wrapper.appendChild(copyButton);
+			});
+
+			// Handle line-numbered code blocks (.code-block-container)
+			const lineNumberedBlocks = document.querySelectorAll('.code-block-container');
+
+			lineNumberedBlocks.forEach(container => {
+				// Skip if already has a copy button
+				if (container.querySelector('.copy-code-button')) {
+					return;
+				}
+
+				// Create copy button
+				const copyButton = document.createElement('button');
+				copyButton.className = 'copy-code-button';
+				copyButton.textContent = 'Copy';
+				copyButton.setAttribute('aria-label', 'Copy code to clipboard');
+
+				// Copy functionality - extract text from code lines only (not line numbers)
+				copyButton.addEventListener('click', async () => {
+					try {
+						// Get all code lines and extract text content
+						const codeLines = container.querySelectorAll('.code-line code');
+						const text = Array.from(codeLines)
+							.map(line => line.textContent)
+							.join('\n');
+
+						// Try modern clipboard API first
+						if (navigator.clipboard && navigator.clipboard.writeText) {
+							await navigator.clipboard.writeText(text);
+						} else {
+							// Fallback for older browsers or non-secure contexts
+							const textarea = document.createElement('textarea');
+							textarea.value = text;
+							textarea.style.position = 'fixed';
+							textarea.style.opacity = '0';
+							document.body.appendChild(textarea);
+							textarea.select();
+							document.execCommand('copy');
+							document.body.removeChild(textarea);
+						}
+
+						// Visual feedback
+						copyButton.textContent = 'Copied!';
+						copyButton.classList.add('copied');
+
+						setTimeout(() => {
+							copyButton.textContent = 'Copy';
+							copyButton.classList.remove('copied');
+						}, 2000);
+					} catch (err) {
+						console.error('Failed to copy code:', err);
+						copyButton.textContent = 'Failed';
+						setTimeout(() => {
+							copyButton.textContent = 'Copy';
+						}, 2000);
+					}
+				});
+
+				// Add button to container
+				container.style.position = 'relative';
+				container.appendChild(copyButton);
+			});
+		}
+
+		// Call the function after page load
+		addCopyButtonsToCodeBlocks();
+
+		// Width toggle functionality
+		const body = document.body;
+		const widthToggle = document.getElementById('widthToggle');
+		const toggleText = document.getElementById('toggleText');
+
+		// Load saved preference
+		const savedExpanded = localStorage.getItem('markserv-file-expanded') === 'true';
+		if (savedExpanded) {
+			body.classList.add('expanded');
+			toggleText.textContent = 'Normal';
+			widthToggle.classList.add('active');
+			widthToggle.title = 'Return to normal width';
+		}
+
+		// Toggle function
+		function toggleWidth() {
+			const isExpanded = body.classList.toggle('expanded');
+
+			// Update button
+			toggleText.textContent = isExpanded ? 'Normal' : 'Expand';
+			widthToggle.classList.toggle('active', isExpanded);
+			widthToggle.title = isExpanded ? 'Return to normal width' : 'Toggle expanded view';
+
+			// Save preference
+			localStorage.setItem('markserv-file-expanded', isExpanded);
+		}
+
+		// Handle click
+		widthToggle.addEventListener('click', function(e) {
+			e.preventDefault();
+			toggleWidth();
+		});
+
+		// Keyboard shortcut (Alt + W)
+		document.addEventListener('keydown', function(e) {
+			if (e.altKey && e.key === 'w') {
+				e.preventDefault();
+				toggleWidth();
+			}
+		});
+
+		// Detect if this is an MLIR file and show visualize button
+		const fileName = '{{fileName}}';
+		if (fileName.toLowerCase().endsWith('.mlir')) {
+			document.body.setAttribute('data-file-type', 'mlir');
+
+			// Handle visualize button click
+			const visualizeButton = document.getElementById('visualizeButton');
+			if (visualizeButton) {
+				visualizeButton.addEventListener('click', function(e) {
+					e.preventDefault();
+
+					// Get the current file path and construct the /model-explorer/ URL
+					const filePath = '{{filePath}}';
+					const visualizeUrl = '/model-explorer' + filePath;
+
+					// Navigate to the Model Explorer view
+					window.location.href = visualizeUrl;
+				});
+			}
+		}
+
+		// Detect if this is a JSON file and show editor button
+		if (fileName.toLowerCase().endsWith('.json')) {
+			document.body.setAttribute('data-file-type', 'json');
+
+			// Handle JSON editor button click
+			const jsonEditorButton = document.getElementById('jsonEditorButton');
+			if (jsonEditorButton) {
+				jsonEditorButton.addEventListener('click', function(e) {
+					e.preventDefault();
+
+					// Get the current file path and construct the /json/ URL
+					const filePath = '{{filePath}}';
+					const editorUrl = '/json' + filePath;
+
+					// Navigate to the JSON editor view
+					window.location.href = editorUrl;
+				});
+			}
+		}
+	});
+</script>
+</body>
+</html>
