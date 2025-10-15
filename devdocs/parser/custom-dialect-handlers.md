@@ -1,13 +1,17 @@
 # Adding Handlers For A Custom MLIR Dialect
 
-Goal
+## Overview
+
+### Goal
 - Improve visualization for a custom dialect when you have its MLIR sources: better names, region labeling, tensor tags, and attributes — while retaining generic fallback for unknown ops.
 
-Integration Levels
-- Generic (already works): Parser accepts unknown dialects via `allowUnregisteredDialects(true)` and renders nodes/edges/attrs generically.
-- Dialect‑aware (recommended if sources available): Register the dialect and add small hooks to enhance names/regions/metadata.
+### Integration Levels
+- **Generic (already works)**: Parser accepts unknown dialects via `allowUnregisteredDialects(true)` and renders nodes/edges/attrs generically.
+- **Dialect-aware (recommended if sources available)**: Register the dialect and add small hooks to enhance names/regions/metadata.
 
-1) Register Your Dialect (printing + parsing)
+## Implementation Steps
+
+### Step 1: Register Your Dialect
 - File: `third_party/model-explorer/src/builtin-adapter/model_json_graph_convert.cc`
 - Add your dialect to the registry used in `ConvertMlirToJson`:
 ```c++
@@ -19,7 +23,7 @@ context.allowUnregisteredDialects(true);
 ```
 - Build: ensure the dialect library is linked. In `third_party/model-explorer/src/builtin-adapter/BUILD`, add your cc_library to the `deps` of `model_json_graph_convert` and any target that needs your headers.
 
-2) Add Dialect Detection + Naming
+### Step 2: Add Dialect Detection + Naming
 - File: `translate_helpers.cc`
 - Add a helper similar to `IsStablehloDialect`:
 ```c++
@@ -38,7 +42,7 @@ if (IsYourDialect(operation)) {
 }
 ```
 
-3) Handle Nested Regions (optional but valuable)
+### Step 3: Handle Nested Regions (Optional)
 - Implement a region processor akin to `ProcessStablehloRegions`/`ProcessTosaRegions` and wire it in `MaybeAddNestedRegion(...)`:
 ```c++
 absl::StatusOr<bool> ProcessYourDialectRegions(
@@ -57,13 +61,13 @@ if (IsYourDialect(operation)) {
   ASSIGN_OR_RETURN(region_processed, ProcessYourDialectRegions(process_region, operation));
 }
 ```
-- Benefit: inner ops appear under meaningful namespaces instead of generic `(region_i)`.
+- **Benefit**: Inner ops appear under meaningful namespaces instead of generic `(region_i)`.
 
-4) Attribute Formatting / Tensor Tags (optional)
+### Step 4: Attribute Formatting / Tensor Tags (Optional)
 - Attributes: `AppendNodeAttrs(...)` already prints MLIR attributes. Add custom printers if you want to compact large lists or redact blobs.
 - Tensor tags: If you have op schema (arg/result names), mirror the TFL pattern (`AddTensorTags(...)`): map op label → arg/result names and call `AppendAttrToMetadata(EdgeType::kInput/kOutput, idx, "__tensor_tag", name)`.
 
-5) Subgraph Linking (if your ops call functions)
+### Step 5: Subgraph Linking (Optional)
 - For ops that reference symbols (e.g., function calls), append subgraph ids so users can jump:
 ```c++
 if (auto flat_sym = llvm::dyn_cast_or_null<mlir::FlatSymbolRefAttr>(attr_val)) {
@@ -71,10 +75,12 @@ if (auto flat_sym = llvm::dyn_cast_or_null<mlir::FlatSymbolRefAttr>(attr_val)) {
 }
 ```
 
-6) Build & Link Notes (Bazel)
-- Add your dialect to the relevant `cc_library` deps in `builtin-adapter/BUILD` (e.g., `model_json_graph_convert`, `translate_helpers`). Ensure headers are included and the external repo providing the dialect is declared in `WORKSPACE` if needed.
+## Build System Configuration
 
-Bazel examples
+### Overview
+Add your dialect to the relevant `cc_library` deps in `builtin-adapter/BUILD` (e.g., `model_json_graph_convert`, `translate_helpers`). Ensure headers are included and the external repo providing the dialect is declared in `WORKSPACE` if needed.
+
+### Bazel Configuration
 ```python
 # WORKSPACE
 # Use http_archive/local_repository per your setup.
@@ -127,7 +133,7 @@ cc_library(
 )
 ```
 
-CMake examples (non-Bazel builds)
+### CMake Configuration
 ```cmake
 # Set these to your local LLVM/MLIR install prefix or build directory exports
 set(LLVM_DIR "/path/to/llvm/lib/cmake/llvm")
@@ -169,7 +175,9 @@ target_link_libraries(ModelExplorerTranslateHelpers PUBLIC
 # - For installed MLIR, link against MLIRTableGen and other components as needed.
 ```
 
-Example extension stub (translate_helpers hooks)
+## Code Examples
+
+### Extension Stub (translate_helpers hooks)
 ```c++
 // translate_helpers_extension.cc
 // Minimal example showing dialect detection and region handling hooks.
@@ -225,7 +233,7 @@ absl::StatusOr<bool> ProcessYourDialectRegions(
 }  // namespace tooling
 ```
 
-Custom naming from dialect attribute
+### Custom Naming from Dialect Attributes
 ```c++
 // Example: derive hierarchical node name from a dialect-specific attribute.
 // If not present, fall back to NameLoc (JAX-style) or leave empty.
@@ -260,7 +268,9 @@ static void SetNameFromDialectAttrOrFallback(mlir::Operation& operation,
 }  // namespace tooling
 ```
 
-7) Test & Verify
+## Testing & Verification
+
+### Basic Testing
 - Create small samples under `devdocs/parser/samples/` (with nested regions and attributes).
 - Convert using the adapter wrapper:
 ```bash
@@ -271,6 +281,35 @@ print(me.ConvertMlirToJson(cfg, 'path/to/your.mlir')[:400])
 PY
 ```
 - Open in Model Explorer and confirm: meaningful labels, region names, input helper nodes, edges, and metadata display.
+  - Samples:
+    - `samples/custom_dialect.mlir` — unknown dialect op
+    - `samples/custom_dialect_nested_region.mlir` — nested region
+    - `samples/custom_dialect_with_namespace_attr.mlir` — uses `your.namespace` attribute to drive naming
 
-Fallback Guarantee
-- If any handler is missing, the pipeline still parses thanks to `allowUnregisteredDialects(true)` and the generic region walker, so you can iterate safely.
+### Namespace Verification
+```bash
+python - << 'PY'
+import json
+from ai_edge_model_explorer_adapter import _pywrap_convert_wrapper as me
+cfg = me.VisualizeConfig(); cfg.const_element_count_limit = 64
+s = me.ConvertMlirToJson(cfg, 'devdocs/parser/samples/custom_dialect_with_namespace_attr.mlir')
+doc = json.loads(s)
+g = doc['graphs'][0]
+node = next(n for n in g['nodes'] if n.get('label') == 'mydialect.foo')
+print('label=', node['label'])
+print('namespace=', node.get('namespace'))
+PY
+```
+**Expected Output:**
+```
+label= mydialect.foo
+namespace= alpha/beta/gamma
+```
+
+## Important Notes
+
+### Fallback Guarantee
+If any handler is missing, the pipeline still parses thanks to `allowUnregisteredDialects(true)` and the generic region walker, so you can iterate safely. This means:
+- Your dialect will always render (even without handlers)
+- You can add handlers incrementally
+- Incomplete implementations won't break the parser
