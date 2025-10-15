@@ -11,6 +11,9 @@
         "chrome-devtools-mcp@latest"
       ],
       "env": {}
+    },
+    "beads": {
+      "command": "beads-mcp"
     }
   }
 }
