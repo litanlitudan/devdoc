@@ -3,6 +3,14 @@
     "dev3000": {
       "type": "http",
       "url": "http://localhost:3684/mcp"
+    },
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "chrome-devtools-mcp@latest"
+      ],
+      "env": {}
     }
   }
 }
