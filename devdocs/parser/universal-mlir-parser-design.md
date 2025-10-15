@@ -209,6 +209,67 @@ The following dialects have dedicated support beyond the generic graphization pa
 
 ## Data Model
 
+### Overview
+
+The parser produces a hierarchical data structure consumed by Model Explorer UI:
+
+```mermaid
+classDiagram
+    class ModelExplorerGraphs {
+        +Graph[] graphs
+    }
+
+    class Graph {
+        +string id
+        +GraphNode[] nodes
+        +Map~string,KeyValue[]~ groupNodeAttributes
+        +TasksData tasksData
+        +LayoutConfigs layoutConfigs
+    }
+
+    class GraphNode {
+        +string id
+        +string label
+        +string namespace
+        +string[] subgraphIds
+        +KeyValue[] attrs
+        +IncomingEdge[] incomingEdges
+        +MetadataItem[] outputsMetadata
+        +MetadataItem[] inputsMetadata
+        +Style style
+        +Config config
+    }
+
+    class IncomingEdge {
+        +string sourceNodeId
+        +string sourceNodeOutputId
+        +string targetNodeInputId
+    }
+
+    class MetadataItem {
+        +string id
+        +KeyValue[] attrs
+    }
+
+    class KeyValue {
+        +string key
+        +string value
+        +string[] node_ids
+    }
+
+    class TasksData {
+        +EdgeOverlaysData[] edgeOverlaysDataListLeftPane
+    }
+
+    ModelExplorerGraphs "1" --> "*" Graph : contains
+    Graph "1" --> "*" GraphNode : contains
+    GraphNode "1" --> "*" IncomingEdge : has
+    GraphNode "1" --> "*" MetadataItem : outputs/inputs
+    GraphNode "1" --> "*" KeyValue : attributes
+    MetadataItem "1" --> "*" KeyValue : contains
+    Graph "1" --> "0..1" TasksData : optional
+```
+
 ### Output Data Model (ModelExplorerGraphs)
 - Top-level structure returned by extensions: `ModelExplorerGraphs = { graphs: Graph[] }`.
 - Built-in MLIR path may also emit a GraphCollection JSON envelope; the UI consumes either form.
