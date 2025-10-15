@@ -66,6 +66,70 @@ npm run build:adapter
 # - C++ build tools (Xcode on macOS, build-essential on Linux)
 ```
 
+## Documentation & Visualization Best Practices
+
+### Mermaid Diagrams for Enhanced Understanding
+
+**IMPORTANT:** When generating markdown documentation, use Mermaid diagrams to visualize complex concepts, relationships, and workflows for better understanding.
+
+**Use Mermaid diagrams for:**
+
+- **Architecture diagrams**: System components, microservices, layers
+- **Flow charts**: Request flows, data pipelines, decision trees
+- **Sequence diagrams**: API interactions, authentication flows, multi-step processes
+- **State diagrams**: Application states, lifecycle transitions
+- **Entity relationships**: Database schemas, data models
+- **Class diagrams**: Object hierarchies, inheritance structures
+- **Gantt charts**: Project timelines, development phases
+
+**Example:**
+
+````markdown
+```mermaid
+graph TD
+    A[User Request] --> B{File Type?}
+    B -->|Markdown| C[markdown-it Parser]
+    B -->|HTML| D[Implant Processor]
+    B -->|MLIR| E[Python Parser]
+    C --> F[Apply Template]
+    D --> F
+    E --> F
+    F --> G[Serve to Browser]
+```
+````
+
+**CRITICAL - Mermaid Syntax Validation:**
+
+**All generated Mermaid diagrams MUST be syntactically valid and render without errors.** Before including any Mermaid diagram:
+
+1. **Verify syntax correctness** - Check node IDs, edge syntax, and proper escaping
+2. **Test common issues**:
+   - Node IDs must start with a letter and contain only alphanumeric characters, underscores, or hyphens
+   - Text containing special characters (parentheses, brackets, quotes) must be properly escaped or quoted
+   - Edge labels must use the correct syntax: `A -->|label| B` or `A -- label --> B`
+   - Subgraphs must have valid syntax and proper indentation
+3. **Follow diagram-specific rules**:
+   - **Flowcharts**: Use valid node shapes `[ ]`, `( )`, `(( ))`, `{ }`, `[/ /]`, etc.
+   - **Sequence diagrams**: Use correct participant syntax and message arrows
+   - **State diagrams**: Use proper state transition syntax
+   - **Class diagrams**: Follow UML class notation correctly
+
+**Common syntax errors to avoid:**
+
+- Using special characters in node IDs without quoting
+- Incorrect edge syntax (missing arrows or wrong arrow types)
+- Mismatched brackets or parentheses in node definitions
+- Invalid subgraph syntax or nesting
+- Improper escaping of special characters in labels
+
+**Benefits:**
+- Immediate visual comprehension of complex systems
+- Self-documenting architecture and flows
+- Easier onboarding for new developers
+- Better technical communication in documentation
+
+This server already supports Mermaid rendering through custom fence renderers, so diagrams will be automatically rendered when markdown files are served.
+
 ## Test Files Convention
 
 **IMPORTANT:** All test files and test-related content should be generated in the `tests/` directory. This includes:
