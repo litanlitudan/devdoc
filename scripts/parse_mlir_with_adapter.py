@@ -5,13 +5,16 @@ MLIR Graph Parser using Model Explorer's Pre-Built Adapter
 Uses the ai-edge-model-explorer-adapter package which contains pre-compiled
 MLIR parsing code from Google's Model Explorer project.
 
+Removes all dense constant values to prevent segfaults, preserving only tensor shape information.
+
 Usage:
     python3 parse_mlir_with_adapter.py <filename> < model.mlir > graph.json
 """
 
 import sys
 import json
-from typing import Dict, List, Any
+import re
+from typing import Dict, List, Any, Tuple, Optional
 
 # Import Model Explorer's pre-built adapter
 try:
@@ -21,17 +24,74 @@ except ImportError:
     ADAPTER_AVAILABLE = False
 
 
+def remove_dense_constant_values(mlir_content: str) -> Tuple[str, int]:
+    """
+    Remove all dense constant values from MLIR, preserving only tensor shape information.
+
+    The C++ adapter can crash when parsing MLIR with large constant tensors.
+    For visualization purposes, we only need tensor shapes, not the actual values.
+
+    Transforms:
+        - Single line: %cst = arith.constant dense<[1.0, 2.0, ...]> : tensor<1000xf32>
+          → %cst = arith.constant dense<0.0> : tensor<1000xf32>  // VALUES_REMOVED
+
+        - Multi-line: %weights = "tf.Const"() {value = dense<[[...], [...]]> : tensor<1000x1000xf32>}
+          → %weights = "tf.Const"() {value = dense<0.0> : tensor<1000x1000xf32>}  // VALUES_REMOVED
+
+    Returns:
+        Tuple of (preprocessed_mlir, count_of_replaced_constants)
+    """
+    replaced_count = 0
+
+    def replace_dense_values(match):
+        nonlocal replaced_count
+        prefix = match.group(1)
+        dense_content = match.group(2)
+        suffix = match.group(3)
+
+        # Always replace with minimal placeholder
+        replaced_count += 1
+
+        # Extract tensor type for informational comment
+        type_match = re.search(r'tensor<([^>]+)>', suffix)
+        tensor_type = type_match.group(1) if type_match else "unknown"
+
+        # Calculate original size for debugging
+        size_kb = len(dense_content) / 1024
+        size_info = f"{size_kb:.1f}KB" if size_kb < 1024 else f"{size_kb/1024:.1f}MB"
+
+        # Replace with minimal placeholder preserving type information
+        return f'{prefix}dense<0.0>{suffix}  // VALUES_REMOVED ({size_info}, shape: {tensor_type})'
+
+    # Pattern to match dense constants (handles multi-line with non-greedy matching)
+    # Captures: (prefix)(dense<...content...>)(: tensor<...> suffix)
+    dense_pattern = re.compile(
+        r'(.*?dense)<([^>]+(?:>[^:]*?<[^>]+)*)>(.*?tensor<[^>]+>.*?)(?=\s*(?:\n|$|//|%|\}))',
+        re.DOTALL
+    )
+
+    processed_content = dense_pattern.sub(replace_dense_values, mlir_content)
+
+    return processed_content, replaced_count
+
+
 def parse_with_adapter(mlir_content: str, filename: str) -> Dict[str, Any]:
     """
     Parse MLIR using Model Explorer's pre-built C++ adapter.
     This is the fastest and most accurate method.
+
+    Removes all dense constant values to prevent segfaults in the C++ adapter.
+    Only tensor shapes are preserved for graph visualization.
     """
     import tempfile
     import os
 
-    # Write MLIR to temporary file (adapter expects file path)
+    # Remove all dense constant values (we only need shapes for visualization)
+    processed_mlir, replaced_count = remove_dense_constant_values(mlir_content)
+
+    # Write preprocessed MLIR to temporary file (adapter expects file path)
     with tempfile.NamedTemporaryFile(mode='w', suffix='.mlir', delete=False) as f:
-        f.write(mlir_content)
+        f.write(processed_mlir)
         temp_path = f.name
 
     try:
@@ -59,22 +119,40 @@ def parse_with_adapter(mlir_content: str, filename: str) -> Dict[str, Any]:
                 for node in nodes:
                     enhance_node_label_with_shapes(node, node_map)
 
-                return {
+                result_graph = {
                     'id': filename,
                     'nodes': nodes
                 }
 
-        return {
+                # Add info about removed constants
+                if replaced_count > 0:
+                    result_graph['metadata'] = {
+                        'constants_removed': replaced_count,
+                        'message': f'Removed {replaced_count} dense constant value(s). Shape information preserved.'
+                    }
+
+                return result_graph
+
+        result_graph = {
             'id': filename,
             'nodes': []
         }
+
+        # Add info about removed constants
+        if replaced_count > 0:
+            result_graph['metadata'] = {
+                'constants_removed': replaced_count,
+                'message': f'Removed {replaced_count} dense constant value(s). Shape information preserved.'
+            }
+
+        return result_graph
     finally:
         # Clean up temporary file
         if os.path.exists(temp_path):
             os.unlink(temp_path)
 
 
-def enhance_node_label_with_shapes(node: Dict[str, Any], node_map: Dict[str, Any] = None) -> None:
+def enhance_node_label_with_shapes(node: Dict[str, Any], node_map: Optional[Dict[str, Any]] = None) -> None:
     """
     Enhance node label with input and output tensor shape information.
     Modifies the node in place.
@@ -154,6 +232,17 @@ def main():
             print(json.dumps({
                 "error": "Empty input",
                 "message": "No MLIR content provided"
+            }), file=sys.stderr)
+            return 1
+
+        # Warn about very large files (>100MB total)
+        content_size_mb = len(mlir_content) / (1024 * 1024)
+        if content_size_mb > 100:
+            print(json.dumps({
+                "error": "File too large",
+                "message": f"MLIR file is {content_size_mb:.1f}MB. Files over 100MB may cause "
+                          f"memory issues or timeouts. Consider splitting the model or using "
+                          f"a dedicated MLIR viewer."
             }), file=sys.stderr)
             return 1
 

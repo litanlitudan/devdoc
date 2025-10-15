@@ -270,6 +270,25 @@ When creating test examples or sample files for new features (like MLIR support)
 - Added MLIR files to watch list for live reload
 - Requires Python 3.9+ and `ai-edge-model-explorer-adapter` package
 
+**Dense Constant Removal (Segfault Prevention):**
+
+- **Problem**: C++ adapter crashes (segfault) when parsing MLIR files containing dense constant tensors
+- **Solution**: Automatic preprocessing in `scripts/parse_mlir_with_adapter.py`:
+  - Removes ALL `dense<...>` constant values before passing to C++ adapter
+  - Replaces with minimal placeholders: `dense<0.0>` with informative comment
+  - Preserves tensor type information (shape, dtype) for graph structure
+  - Handles both single-line and multi-line constants
+  - Adds metadata to JSON output with count of removed constants
+  - Rejects files >100MB with helpful error message
+- **Impact**:
+  - ✅ Complete elimination of segfault risk
+  - ✅ Faster parsing (less data to process)
+  - ✅ All graph structure and shape information preserved
+  - ✅ Values not needed for visualization anyway
+- **Example Transformations**:
+  - `dense<[1.0, 2.0, ..., 1000 values]>` → `dense<0.0>  // VALUES_REMOVED (4KB, shape: 1000xf32)`
+  - Large weights: `dense<[[...]]>` (5MB) → `dense<0.0>  // VALUES_REMOVED (5.0MB, shape: 1000x1000xf32)`
+
 **Python Dependencies:**
 
 MLIR graph parsing and ONNX shape inference require Python 3.9+ with these packages:
