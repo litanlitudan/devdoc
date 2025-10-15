@@ -16,6 +16,10 @@ npm run cover
 # Linting only (uses XO)
 npx xo
 
+# Clean build artifacts
+npm run clean              # Remove dist/ only
+npm run clean:artifacts    # Remove all build artifacts (dist/, coverage/, Bazel artifacts)
+
 # Start the server (from repository root)
 ./lib/cli.js [file-or-directory]
 
@@ -64,6 +68,11 @@ npm run build:adapter
 # - Bazel (brew install bazelisk on macOS, or sudo apt install bazel on Ubuntu)
 # - Python 3.9+
 # - C++ build tools (Xcode on macOS, build-essential on Linux)
+
+# Resource limits are automatically applied:
+# - CPU cores limited to 50% of available cores (minimum 1)
+# - RAM limited to 12GB
+# - Build process runs with lower priority (nice -n 10)
 ```
 
 ## Documentation & Visualization Best Practices

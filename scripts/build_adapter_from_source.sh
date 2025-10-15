@@ -62,7 +62,40 @@ if [ ! -f "$BUILD_SCRIPT" ]; then
 fi
 
 echo -e "${GREEN}Running Bazel build (this may take several minutes)...${NC}"
-bash "$BUILD_SCRIPT" "$PACKAGE_VERSION"
+echo -e "${YELLOW}Applying resource limits to prevent system overload...${NC}"
+
+# Detect number of CPU cores and limit to half
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    TOTAL_CORES=$(sysctl -n hw.ncpu)
+else
+    # Linux
+    TOTAL_CORES=$(nproc)
+fi
+LIMIT_CORES=$((TOTAL_CORES / 2))
+if [ $LIMIT_CORES -lt 1 ]; then
+    LIMIT_CORES=1
+fi
+
+echo -e "${YELLOW}Limiting build to ${LIMIT_CORES} of ${TOTAL_CORES} CPU cores${NC}"
+
+# Create temporary bazelrc with resource limits
+TEMP_BAZELRC="$(mktemp)"
+cat > "$TEMP_BAZELRC" << EOF
+build --jobs=${LIMIT_CORES}
+build --local_ram_resources=12288
+build --local_cpu_resources=${LIMIT_CORES}
+EOF
+
+echo -e "${YELLOW}Using custom Bazel config: ${TEMP_BAZELRC}${NC}"
+
+# Export BAZELRC environment variable and additional flags
+export BAZELRC="$TEMP_BAZELRC"
+export BAZEL_FLAGS="${BAZEL_FLAGS:-} --jobs=${LIMIT_CORES} --local_ram_resources=12288 --local_cpu_resources=${LIMIT_CORES}"
+
+# Run build with nice to lower priority and cleanup after
+trap "rm -f '$TEMP_BAZELRC'" EXIT
+nice -n 10 bash "$BUILD_SCRIPT" "$PACKAGE_VERSION"
 
 # Find the generated wheel
 WHEEL_FILE=$(find gen/adapter_pip/dist -name "*.whl" | head -n 1)
