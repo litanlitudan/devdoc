@@ -288,3 +288,5 @@ npm run setup:python
 This script will automatically check and install ONNX if needed. MLIR parsing requires no external dependencies.
 
 **Note:** The previous `ai-edge-model-explorer-adapter` dependency is no longer required for MLIR parsing.
+
+We track work in Beads instead of Markdown. Run `bd quickstart` to see how.

@@ -44,3 +44,5 @@
 ## Agent-Specific Notes
 - Edit source under `lib/`; never hand-edit `dist/`.
 - Follow this guide for all subdirectories of the repo.
+
+We track work in Beads instead of Markdown. Run `bd quickstart` to see how.
