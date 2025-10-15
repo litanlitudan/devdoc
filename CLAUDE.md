@@ -44,35 +44,16 @@ npx ava tests/*.test.js --match "*table*"  # Run tests matching pattern
 ### Setting Up Python Dependencies
 
 ```bash
-# Install Python dependencies for ONNX and MLIR support
+# Install Python dependencies for ONNX support (optional)
 npm run setup:python
 
 # This will:
 # - Check if Python 3.9+ is available
 # - Install onnx>=1.12.0 (for ONNX shape inference)
-# - Install ai-edge-model-explorer-adapter>=0.1.13 (for MLIR parsing)
 # - Work with conda environments automatically
 
-# Note: These dependencies are optional and only needed for ONNX/MLIR features
-```
-
-### Building Model Explorer Adapter from Source (Advanced)
-
-If the pre-built adapter has GLIBC compatibility issues on your Linux system:
-
-```bash
-# Build and install the ai-edge-model-explorer-adapter from source
-npm run build:adapter
-
-# Prerequisites:
-# - Bazel (brew install bazelisk on macOS, or sudo apt install bazel on Ubuntu)
-# - Python 3.9+
-# - C++ build tools (Xcode on macOS, build-essential on Linux)
-
-# Resource limits are automatically applied:
-# - CPU cores limited to 50% of available cores (minimum 1)
-# - RAM limited to 12GB
-# - Build process runs with lower priority (nice -n 10)
+# Note: MLIR parsing requires no external dependencies (Python 3.9+ only)
+# Note: ONNX dependencies are optional and only needed for ONNX shape inference
 ```
 
 ## Documentation & Visualization Best Practices
@@ -188,12 +169,12 @@ When creating test examples or sample files for new features (like MLIR support)
 **MLIR Support (Custom Addition):**
 
 - `.mlir` files are recognized as a distinct file type
-- Python-based graph parsing using Model Explorer's pre-built adapter
+- Direct Python-based graph parsing using regex patterns
 - Converts MLIR text to Model Explorer graph format via `lib/mlir-to-graph.ts`
-- Executes `scripts/parse_mlir_with_adapter.py` for MLIR parsing
+- Executes `scripts/parse_mlir.py` for MLIR parsing
 - Displays tensor shapes in node labels (input/output dimensions)
-- Supports StableHLO, TensorFlow Lite, and other MLIR dialects
-- Requires Python 3.9+ with `ai-edge-model-explorer-adapter` package
+- Supports ALL MLIR dialects by treating operations as generic graph nodes
+- Requires Python 3.9+ (no external dependencies)
 
 ### LiveReload Integration
 
@@ -263,49 +244,47 @@ When creating test examples or sample files for new features (like MLIR support)
 **MLIR Support Implementation:**
 
 - Added MLIR to recognized file types in `fileTypes` object
-- Implemented Python-based MLIR parsing using Model Explorer's pre-built adapter
-- Created `scripts/parse_mlir_with_adapter.py` for MLIR graph conversion
+- Implemented direct Python-based MLIR parsing using regex patterns
+- Created `scripts/parse_mlir.py` for MLIR graph conversion
 - Added tensor shape display in node labels (input/output shapes)
-- Modified `lib/mlir-to-graph.ts` to use Python adapter exclusively
+- Modified `lib/mlir-to-graph.ts` to use direct Python parser
 - Added MLIR files to watch list for live reload
-- Requires Python 3.9+ and `ai-edge-model-explorer-adapter` package
+- Supports ALL MLIR dialects by treating operations as generic graph nodes
+- Requires Python 3.9+ only (no external dependencies)
 
-**Dense Constant Removal (Segfault Prevention):**
+**Direct Python Parser Architecture:**
 
-- **Problem**: C++ adapter crashes (segfault) when parsing MLIR files containing dense constant tensors
-- **Solution**: Automatic preprocessing in `scripts/parse_mlir_with_adapter.py`:
-  - Removes ALL `dense<...>` constant values before passing to C++ adapter
-  - Replaces with minimal placeholders: `dense<0.0>` with informative comment
-  - Preserves tensor type information (shape, dtype) for graph structure
-  - Handles both single-line and multi-line constants
-  - Adds metadata to JSON output with count of removed constants
+- **Previous Approach**: Used Model Explorer's C++ adapter with hardcoded dialect support
+- **Current Approach**: Direct Python parsing with regex patterns in `scripts/parse_mlir.py`
+  - Parses MLIR text using regex to extract operations, inputs, and outputs
+  - Constructs Model Explorer GraphNode structures directly in Python
+  - Preserves SSA (Static Single Assignment) order for proper edge connections
+  - Supports arbitrary MLIR dialects without hardcoded restrictions
+  - Optional dense constant removal to reduce file size and prevent issues
+  - Handles both quoted (`"dialect.op"()`) and unquoted (`dialect.op`) operations
   - Rejects files >100MB with helpful error message
-- **Impact**:
-  - ✅ Complete elimination of segfault risk
-  - ✅ Faster parsing (less data to process)
-  - ✅ All graph structure and shape information preserved
-  - ✅ Values not needed for visualization anyway
-- **Example Transformations**:
-  - `dense<[1.0, 2.0, ..., 1000 values]>` → `dense<0.0>  // VALUES_REMOVED (4KB, shape: 1000xf32)`
-  - Large weights: `dense<[[...]]>` (5MB) → `dense<0.0>  // VALUES_REMOVED (5.0MB, shape: 1000x1000xf32)`
+- **Benefits**:
+  - ✅ Supports ALL MLIR dialects (no adapter limitations)
+  - ✅ No external dependencies beyond Python 3.9+
+  - ✅ Direct graph construction without C++ interop
+  - ✅ Preserved tensor shape information for visualization
+  - ✅ Fixed edge connection issues by preserving operation order
+- **Parser Features**:
+  - Detects function inputs/outputs automatically
+  - Creates Input/Output nodes for graph visualization
+  - Builds edges based on SSA value dependencies
+  - Includes tensor shape metadata in node labels
 
 **Python Dependencies:**
 
-MLIR graph parsing and ONNX shape inference require Python 3.9+ with these packages:
-- `onnx>=1.12.0` - For ONNX model shape inference
-- `ai-edge-model-explorer-adapter>=0.1.13` - Google's pre-built C++ MLIR parser
+ONNX shape inference requires Python 3.9+ with:
+- `onnx>=1.12.0` - For ONNX model shape inference (optional)
 
 **Quick setup:**
 ```bash
 npm run setup:python
 ```
 
-This script will automatically check and install the required packages. It works with conda environments and provides helpful error messages.
+This script will automatically check and install ONNX if needed. MLIR parsing requires no external dependencies.
 
-**Manual installation:**
-```bash
-pip install onnx ai-edge-model-explorer-adapter
-```
-
-**Note on GLIBC Compatibility:**
-The pre-built `ai-edge-model-explorer-adapter` requires GLIBC_2.33+ on Linux systems (Ubuntu 21.04+, Debian 11+, RHEL 9+). If you encounter GLIBC version errors, build from source using `npm run build:adapter`.
+**Note:** The previous `ai-edge-model-explorer-adapter` dependency is no longer required for MLIR parsing.

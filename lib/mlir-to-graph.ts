@@ -4,11 +4,11 @@
  * This module converts MLIR (Multi-Level Intermediate Representation) text
  * into a graph format compatible with Google's Model Explorer visualization tool.
  *
- * Uses Model Explorer's pre-built adapter package (ai-edge-model-explorer-adapter)
- * which contains Google's official C++ MLIR parser compiled for multiple platforms.
+ * Parses MLIR text directly in Python using regex patterns and constructs
+ * Model Explorer graph structures. Supports ALL MLIR dialects by treating
+ * operations as generic graph nodes.
  *
- * Note: Requires Python 3.9+ with ai-edge-model-explorer-adapter installed.
- * Install with: pip install ai-edge-model-explorer-adapter
+ * Note: Requires Python 3.9+. No external dependencies required.
  */
 
 import { execFileSync } from 'child_process'
@@ -44,20 +44,20 @@ export interface ModelExplorerGraph {
 }
 
 /**
- * Convert MLIR text to Model Explorer graph format using Python adapter
+ * Convert MLIR text to Model Explorer graph format using direct Python parser
  *
- * Uses Model Explorer's pre-built C++ MLIR parser via the
- * ai-edge-model-explorer-adapter Python package.
+ * Parses MLIR text directly using Python regex patterns and constructs
+ * Model Explorer graph structures. Supports arbitrary MLIR dialects.
  *
  * @param mlirContent The MLIR text content to parse
  * @param filename The filename to use as the graph ID
  * @returns A graph object compatible with Model Explorer
- * @throws Error if Python or adapter is not available, or parsing fails
+ * @throws Error if Python is not available or parsing fails
  */
 export function convertMLIRToGraph(mlirContent: string, filename: string): ModelExplorerGraph {
 	try {
 		// Path to Python script (relative to compiled JS location in dist/)
-		const scriptPath = join(__dirname, '..', 'scripts', 'parse_mlir_with_adapter.py')
+		const scriptPath = join(__dirname, '..', 'scripts', 'parse_mlir.py')
 
 		// Run Python MLIR parser with filename as argument
 		// Use 'python' in conda environment, otherwise 'python3'
@@ -73,13 +73,8 @@ export function convertMLIRToGraph(mlirContent: string, filename: string): Model
 
 		// Check if parsing succeeded
 		if (result.error) {
-			// Distinguish between adapter not installed vs parsing errors
-			if (result.error === 'Model Explorer adapter not available') {
-				throw new Error(`MLIR parser not installed: ${result.message}`)
-			} else {
-				// Show parsing error directly without misleading prefix
-				throw new Error(result.message)
-			}
+			// Show parsing error directly
+			throw new Error(result.message)
 		}
 
 		console.log('✓ Python MLIR parsing successful')
@@ -89,22 +84,17 @@ export function convertMLIRToGraph(mlirContent: string, filename: string): Model
 		// Provide helpful error messages for system-level errors
 		if (error.code === 'ENOENT') {
 			throw new Error(
-				'Python not found. Please install Python 3.9+ and ensure it is in your PATH.\n' +
-				'Then install MLIR parser: pip install ai-edge-model-explorer-adapter'
+				'Python not found. Please install Python 3.9+ and ensure it is in your PATH.'
 			)
-		} else if (error.message?.includes('MLIR parser not installed')) {
-			throw error // Re-throw adapter installation error
 		} else if (error.message?.includes('INVALID_ARGUMENT') || error.message?.includes('Failed to parse')) {
 			throw error // Re-throw parsing errors directly (these are MLIR syntax errors)
 		} else if (error.status !== undefined) {
 			throw new Error(
-				`Python MLIR parser failed (exit code ${error.status}).\n` +
-				'Install with: pip install ai-edge-model-explorer-adapter'
+				`Python MLIR parser failed (exit code ${error.status}).`
 			)
 		} else {
 			throw new Error(
-				`MLIR parsing error: ${error.message}\n` +
-				'Ensure MLIR parser is installed: pip install ai-edge-model-explorer-adapter'
+				`MLIR parsing error: ${error.message}`
 			)
 		}
 	}

@@ -15,3 +15,4 @@ package-lock.json
 tests/fixtures/onnx/
 third_party/model-explorer/src/builtin-adapter/gen/
 third_party/model-explorer/src/builtin-adapter/bazel-*
+**/*.pyc

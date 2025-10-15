@@ -1,8 +1,12 @@
-# MLIR Location Information (loc) Support in ai-edge-model-explorer-adapter
+# MLIR Location Information (loc) Support
+
+> **Note:** This document describes the previous implementation using `ai-edge-model-explorer-adapter`.
+> As of the latest version, markserv uses a direct Python parser (`scripts/parse_mlir.py`) that does not require the adapter.
+> Location information support in the new parser would need to be implemented separately.
 
 ## Executive Summary
 
-The `ai-edge-model-explorer-adapter` builtin adapter **can parse MLIR files with location (loc) information**. Location attributes are fully supported during parsing but are not currently extracted or displayed in the Model Explorer visualization.
+The direct Python MLIR parser (`scripts/parse_mlir.py`) focuses on structural parsing (nodes, edges, types). Location attributes can be added as a future enhancement.
 
 ## What are MLIR Location Attributes?
 
@@ -59,7 +63,7 @@ graph LR
 
 #### In Current Implementation
 
-Looking at `scripts/parse_mlir_with_adapter.py`:
+Looking at `scripts/parse_mlir.py`:
 
 - Parser focuses on structural elements: nodes, edges, tensor shapes
 - Location information is **parsed but not extracted** for visualization
@@ -86,7 +90,7 @@ To utilize location information in visualizations, the parser could be enhanced:
 
 ### Option 1: Extract Location Metadata
 
-Modify `scripts/parse_mlir_with_adapter.py` to extract location attributes from nodes:
+Modify `scripts/parse_mlir.py` to extract location attributes from nodes:
 
 ```python
 def extract_location_info(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -157,8 +161,8 @@ module {
 }
 EOF
 
-# Parse with adapter
-python3 scripts/parse_mlir_with_adapter.py test_loc.mlir < test_loc.mlir
+# Parse with direct parser
+python3 scripts/parse_mlir.py test_loc.mlir < test_loc.mlir
 ```
 
 Expected: Parsing succeeds without errors (location info is accepted but not in output).
@@ -173,17 +177,16 @@ Expected: Parsing succeeds without errors (location info is accepted but not in 
 ## References
 
 - [MLIR Language Reference - Locations](https://mlir.llvm.org/docs/LangRef/#locations)
-- [MLIR Location API Documentation](https://mlir.llvm.org/doxygen/classmlir_1_1Location.html)
-- Current implementation: `scripts/parse_mlir_with_adapter.py`
+- Current implementation: `scripts/parse_mlir.py`
 - Graph conversion: `lib/mlir-to-graph.ts`
 
 ## Version Information
 
-- **Adapter Version**: ai-edge-model-explorer-adapter>=0.1.13
-- **Python Requirement**: 3.9+
-- **MLIR Support**: All standard dialects (StableHLO, TensorFlow Lite, etc.)
+- **Parser**: Direct Python regex-based parser
+- **Python Requirement**: 3.9+ (no external dependencies)
+- **MLIR Support**: All MLIR dialects (generic operation parsing)
 - **Documentation Date**: 2024
 
 ---
 
-**Status**: Location parsing is supported; extraction/visualization is not yet implemented.
+**Status**: Location parsing not yet implemented in direct Python parser; can be added as future enhancement.

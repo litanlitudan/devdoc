@@ -68,7 +68,7 @@
     "lib/icons",
     "lib/templates",
     "scripts/infer_onnx_shapes.py",
-    "scripts/parse_mlir_with_adapter.py",
+    "scripts/parse_mlir.py",
     "scripts/setup-python-deps.sh",
     "media/markserv-favicon-96x96.png",
     "media/markserv-logo-term.png"
