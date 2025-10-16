@@ -199,41 +199,41 @@ Makefile                  ← Build automation tasks
 
 | Concern / Layer                    | Selected Tool                        | Rationale                                                                                             | Alternatives                                      |
 | ---------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| CLI framework                      | **oclif**                            | Robust, supports subcommands, plugin architecture, well suited for complex CLIs                       | commander.js (lighter), yargs, clipanion          |
-| Prompting / interactivity          | `inquirer` or `prompts`              | Widely used, flexible for interactive questions, config flows                                         | enquirer, terminal-kit                            |
-| Logging                            | **pino**                             | Fast structured logging, JSON output, shared with server                                              | winston, debug, bunyan                            |
-| Configuration / validation         | **zod**                              | Schema declarations in TS, runtime and static validation, shared across CLI/API                       | io-ts, class-validator, yup                       |
-| Task orchestration                 | Native `Promise` + `p-queue`         | Lightweight with bounded concurrency                                                                  | bull, bee-queue (if persistence needed)           |
-| Process invocation                 | **execa**                            | Clean interface over child_process with promise support                                               | Native child_process, cross-spawn                 |
-| Bundling / packaging               | **esbuild** + optional `nexe`        | Fast bundler; nexe for optional single executable                                                     | tsup, ncc, pkg (deprecated)                       |
-| TypeScript toolchain               | `typescript`, `ts-node`              | Standard TS compiler with dev convenience                                                             | Babel + TS plugin                                 |
-| Testing                            | **vitest** (with `@oclif/test`)      | Unified test runner with TS support, CLI runner for command tests                                     | jest + ts-jest, ava                               |
+| CLI framework                      | [**oclif**](https://github.com/oclif/oclif)                            | Robust, supports subcommands, plugin architecture, well suited for complex CLIs                       | commander.js (lighter), yargs, clipanion          |
+| Prompting / interactivity          | [**inquirer.js**](https://github.com/SBoudrias/Inquirer.js)                      | Industry standard for CLI prompts, rich question types, validation support, TypeScript-friendly       | prompts, enquirer, terminal-kit                   |
+| Logging                            | [**pino**](https://github.com/pinojs/pino)                             | Fast structured logging, JSON output, shared with server                                              | winston, debug, bunyan                            |
+| Configuration / validation         | [**zod**](https://github.com/colinhacks/zod)                              | Schema declarations in TS, runtime and static validation, shared across CLI/API                       | io-ts, class-validator, yup                       |
+| Task orchestration                 | Native `Promise` + [**p-queue**](https://github.com/sindresorhus/p-queue)         | Lightweight with bounded concurrency                                                                  | bull, bee-queue (if persistence needed)           |
+| Process invocation                 | [**execa**](https://github.com/sindresorhus/execa)                            | Clean interface over child_process with promise support                                               | Native child_process, cross-spawn                 |
+| Bundling / packaging               | [**esbuild**](https://github.com/evanw/esbuild) + optional [**nexe**](https://github.com/nexe/nexe)        | Fast bundler; nexe for optional single executable                                                     | tsup, ncc, pkg (deprecated)                       |
+| TypeScript toolchain               | [**typescript**](https://github.com/microsoft/TypeScript), [**ts-node**](https://github.com/TypeStrong/ts-node)              | Standard TS compiler with dev convenience                                                             | Babel + TS plugin                                 |
+| Testing                            | [**vitest**](https://github.com/vitest-dev/vitest) (with [**@oclif/test**](https://github.com/oclif/test))      | Unified test runner with TS support, CLI runner for command tests                                     | jest + ts-jest, ava                               |
 
 ### API Stack
 
 | Concern / Layer                    | Selected Tool                        | Rationale                                                                                             | Alternatives                                      |
 | ---------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| HTTP framework                     | **Express**                          | Already in use, rich ecosystem, easy integration with existing setup                                  | Fastify (faster), Koa (middleware-focused)        |
-| Router modularization              | `express.Router` + feature folders   | Keeps route logic isolated, aligns with TypeScript modules                                            | express-promise-router, Fastify plugins           |
-| Validation / schema typing         | **zod**                              | Shared inference for request/response types, integrates with OpenAPI generation                       | io-ts, yup, @sinclair/typebox                     |
-| Error handling                     | Central middleware + `http-errors`   | Consistent JSON error envelopes with status codes                                                     | Custom classes, boom (Hapi style)                 |
-| Logging                            | **pino** (shared util)               | Fast structured logging, shared with CLI/server                                                       | winston, bunyan                                   |
-| File system abstraction            | Node `fs/promises` + wrappers        | Native, typed, minimal dependencies                                                                   | fs-extra, graceful-fs                             |
-| MLIR/ONNX integration              | `execa` adapters to Python scripts   | Keeps current Python parsers accessible with TypeScript orchestration                                 | Future: direct TS parsers or WASM bindings        |
-| Testing                            | **vitest** + `supertest`             | Unified test runner; supertest for HTTP assertions                                                    | jest + supertest, node:test + undici              |
-| API specification                  | `zod-openapi` + `redoc`/`scalar`     | Generates OpenAPI docs from schemas without duplication                                               | ts-json-schema-generator, manual YAML             |
-| Build automation                   | **Make/Makefile**                    | Cross-platform build tasks, dependency management                                                     | GitHub Actions only, npm scripts only             |
+| HTTP framework                     | [**Express**](https://github.com/expressjs/express)                          | Already in use, rich ecosystem, easy integration with existing setup                                  | Fastify (faster), Koa (middleware-focused)        |
+| Router modularization              | [**express.Router**](https://github.com/expressjs/express) + feature folders   | Keeps route logic isolated, aligns with TypeScript modules                                            | express-promise-router, Fastify plugins           |
+| Validation / schema typing         | [**zod**](https://github.com/colinhacks/zod)                              | Shared inference for request/response types, integrates with OpenAPI generation                       | io-ts, yup, @sinclair/typebox                     |
+| Error handling                     | Central middleware + [**http-errors**](https://github.com/jshttp/http-errors)   | Consistent JSON error envelopes with status codes                                                     | Custom classes, boom (Hapi style)                 |
+| Logging                            | [**pino**](https://github.com/pinojs/pino) (shared util)               | Fast structured logging, shared with CLI/server                                                       | winston, bunyan                                   |
+| File system abstraction            | Node [**fs/promises**](https://nodejs.org/api/fs.html#promises-api) + wrappers        | Native, typed, minimal dependencies                                                                   | fs-extra, graceful-fs                             |
+| MLIR/ONNX integration              | [**execa**](https://github.com/sindresorhus/execa) adapters to Python scripts   | Keeps current Python parsers accessible with TypeScript orchestration                                 | Future: direct TS parsers or WASM bindings        |
+| Testing                            | [**vitest**](https://github.com/vitest-dev/vitest) + [**supertest**](https://github.com/ladjs/supertest)             | Unified test runner; supertest for HTTP assertions                                                    | jest + supertest, node:test + undici              |
+| API specification                  | [**zod-openapi**](https://github.com/samchungy/zod-openapi) + [**redoc**](https://github.com/Redocly/redoc)/[**scalar**](https://github.com/scalar/scalar)     | Generates OpenAPI docs from schemas without duplication                                               | ts-json-schema-generator, manual YAML             |
+| Build automation                   | [**Make/Makefile**](https://www.gnu.org/software/make/)                    | Cross-platform build tasks, dependency management                                                     | GitHub Actions only, npm scripts only             |
 
 ### Shared Dependencies
 
 | Library                            | Usage                                                                                                 |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `typescript` (^5.0)                | Type system and compiler                                                                              |
-| `zod` (^3.20)                      | Schema validation and type inference (CLI + API)                                                      |
-| `pino` (^8.0)                      | Structured logging (CLI + API + server)                                                               |
-| `execa` (^7.0)                     | Process execution wrapper (CLI + API services)                                                        |
-| `vitest` (^1.0)                    | Test framework (all modules)                                                                          |
-| `make`                             | Build automation (invoked from CLI dev commands)                                                      |
+| [**typescript**](https://github.com/microsoft/TypeScript) (^5.0)                | Type system and compiler                                                                              |
+| [**zod**](https://github.com/colinhacks/zod) (^3.20)                      | Schema validation and type inference (CLI + API)                                                      |
+| [**pino**](https://github.com/pinojs/pino) (^8.0)                      | Structured logging (CLI + API + server)                                                               |
+| [**execa**](https://github.com/sindresorhus/execa) (^7.0)                     | Process execution wrapper (CLI + API services)                                                        |
+| [**vitest**](https://github.com/vitest-dev/vitest) (^1.0)                    | Test framework (all modules)                                                                          |
+| [**make**](https://www.gnu.org/software/make/)                             | Build automation (invoked from CLI dev commands)                                                      |
 
 ---
 

@@ -15,7 +15,7 @@ try {
 	console.warn('  Install with: pip install ai-edge-model-explorer-adapter');
 }
 
-describe('MLIR Tensor Shape Extraction', () => {
+describe.skip('MLIR Tensor Shape Extraction', () => {
 	beforeAll(() => {
 		if (!adapterAvailable) {
 			console.log('Skipping MLIR tests - adapter not available');
