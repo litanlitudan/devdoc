@@ -853,7 +853,10 @@
 		const zoomLevelDisplay = document.getElementById('zoomLevel');
 
 		let currentZoom = 1.0;
+		let defaultZoom = 1.5; // Will be calculated based on diagram size
 		let currentDiagram = null;
+		let diagramWidth = 0; // Natural diagram dimensions
+		let diagramHeight = 0;
 		let isPanning = false;
 		let startX = 0;
 		let startY = 0;
@@ -886,29 +889,61 @@
 			modalDiagram.appendChild(clonedDiagram);
 			currentDiagram = clonedDiagram;
 
-			// Set initial zoom to 150% for better visibility
-			currentZoom = 1.5;
-			updateZoom();
-
-			// Show modal
+			// Show modal first to get accurate dimensions
 			modal.classList.add('active');
 			document.body.style.overflow = 'hidden';
 
-			// Center the diagram after modal opens
+			// Calculate adaptive default zoom based on diagram size
 			setTimeout(() => {
 				const modalWidth = modalBody.clientWidth;
 				const modalHeight = modalBody.clientHeight;
-				const contentWidth = modalBody.scrollWidth;
-				const contentHeight = modalBody.scrollHeight;
 
-				// Center horizontally and vertically if content is larger than viewport
-				if (contentWidth > modalWidth) {
-					modalBody.scrollLeft = (contentWidth - modalWidth) / 2;
-				}
-				if (contentHeight > modalHeight) {
-					modalBody.scrollTop = (contentHeight - modalHeight) / 2;
-				}
-			}, 100);
+				// Get the natural diagram dimensions (before any scaling) and store them
+				diagramWidth = clonedDiagram.offsetWidth;
+				diagramHeight = clonedDiagram.offsetHeight;
+
+				// Calculate zoom to make diagram take up ~70% of viewport (comfortable viewing)
+				const zoomToFitWidth = (modalWidth * 0.7) / diagramWidth;
+				const zoomToFitHeight = (modalHeight * 0.7) / diagramHeight;
+
+				// Use the smaller zoom to ensure diagram fits comfortably
+				let calculatedZoom = Math.min(zoomToFitWidth, zoomToFitHeight);
+
+				// Apply bounds: minimum 0.75 (75%), maximum 2.5 (250%)
+				// Allow scaling down for large diagrams, but not too much
+				calculatedZoom = Math.max(0.75, Math.min(2.5, calculatedZoom));
+
+				// Round to nearest 0.25 for cleaner zoom levels
+				defaultZoom = Math.round(calculatedZoom * 4) / 4;
+				currentZoom = defaultZoom;
+
+				updateZoom();
+
+				// Smart positioning based on diagram aspect ratio
+				setTimeout(() => {
+					const contentWidth = modalBody.scrollWidth;
+					const contentHeight = modalBody.scrollHeight;
+					const aspectRatio = diagramWidth / diagramHeight;
+
+					// For tall diagrams (height > 2x width), start at top-left
+					// For wide diagrams (width > 2x height), start at top-left
+					// For roughly square diagrams (0.5 <= ratio <= 2), center both directions
+
+					if (aspectRatio < 0.5 || aspectRatio > 2.0) {
+						// Tall or wide diagrams: start at top-left corner
+						modalBody.scrollLeft = 0;
+						modalBody.scrollTop = 0;
+					} else {
+						// Roughly square diagrams: center both directions if larger than viewport
+						if (contentWidth > modalWidth) {
+							modalBody.scrollLeft = (contentWidth - modalWidth) / 2;
+						}
+						if (contentHeight > modalHeight) {
+							modalBody.scrollTop = (contentHeight - modalHeight) / 2;
+						}
+					}
+				}, 50);
+			}, 50);
 		}
 
 		function closeMermaidModal() {
@@ -970,22 +1005,33 @@
 		}
 
 		function resetZoom() {
-			currentZoom = 1.5;
+			currentZoom = defaultZoom;
 			updateZoom();
 
-			// Center the diagram after reset
+			// Smart positioning based on diagram aspect ratio (same as openMermaidModal)
 			setTimeout(() => {
 				const modalWidth = modalBody.clientWidth;
 				const modalHeight = modalBody.clientHeight;
 				const contentWidth = modalBody.scrollWidth;
 				const contentHeight = modalBody.scrollHeight;
+				const aspectRatio = diagramWidth / diagramHeight;
 
-				// Center horizontally and vertically if content is larger than viewport
-				if (contentWidth > modalWidth) {
-					modalBody.scrollLeft = (contentWidth - modalWidth) / 2;
-				}
-				if (contentHeight > modalHeight) {
-					modalBody.scrollTop = (contentHeight - modalHeight) / 2;
+				// For tall diagrams (height > 2x width), start at top-left
+				// For wide diagrams (width > 2x height), start at top-left
+				// For roughly square diagrams (0.5 <= ratio <= 2), center both directions
+
+				if (aspectRatio < 0.5 || aspectRatio > 2.0) {
+					// Tall or wide diagrams: reset to top-left corner
+					modalBody.scrollLeft = 0;
+					modalBody.scrollTop = 0;
+				} else {
+					// Roughly square diagrams: center both directions if larger than viewport
+					if (contentWidth > modalWidth) {
+						modalBody.scrollLeft = (contentWidth - modalWidth) / 2;
+					}
+					if (contentHeight > modalHeight) {
+						modalBody.scrollTop = (contentHeight - modalHeight) / 2;
+					}
 				}
 			}, 50);
 		}
