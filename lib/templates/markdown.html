@@ -925,14 +925,22 @@
 					const contentHeight = modalBody.scrollHeight;
 					const aspectRatio = diagramWidth / diagramHeight;
 
-					// For tall diagrams (height > 2x width), start at top-left
-					// For wide diagrams (width > 2x height), start at top-left
-					// For roughly square diagrams (0.5 <= ratio <= 2), center both directions
+					// For tall diagrams (height > 2x width): start at top, center horizontally
+					// For wide diagrams (width > 2x height): start at left, center vertically
+					// For roughly square diagrams (0.5 <= ratio <= 2): center both directions
 
-					if (aspectRatio < 0.5 || aspectRatio > 2.0) {
-						// Tall or wide diagrams: start at top-left corner
-						modalBody.scrollLeft = 0;
+					if (aspectRatio < 0.5) {
+						// Tall diagrams: start at top, center horizontally
 						modalBody.scrollTop = 0;
+						if (contentWidth > modalWidth) {
+							modalBody.scrollLeft = (contentWidth - modalWidth) / 2;
+						}
+					} else if (aspectRatio > 2.0) {
+						// Wide diagrams: start at left, center vertically
+						modalBody.scrollLeft = 0;
+						if (contentHeight > modalHeight) {
+							modalBody.scrollTop = (contentHeight - modalHeight) / 2;
+						}
 					} else {
 						// Roughly square diagrams: center both directions if larger than viewport
 						if (contentWidth > modalWidth) {
@@ -1016,14 +1024,22 @@
 				const contentHeight = modalBody.scrollHeight;
 				const aspectRatio = diagramWidth / diagramHeight;
 
-				// For tall diagrams (height > 2x width), start at top-left
-				// For wide diagrams (width > 2x height), start at top-left
-				// For roughly square diagrams (0.5 <= ratio <= 2), center both directions
+				// For tall diagrams (height > 2x width): start at top, center horizontally
+				// For wide diagrams (width > 2x height): start at left, center vertically
+				// For roughly square diagrams (0.5 <= ratio <= 2): center both directions
 
-				if (aspectRatio < 0.5 || aspectRatio > 2.0) {
-					// Tall or wide diagrams: reset to top-left corner
-					modalBody.scrollLeft = 0;
+				if (aspectRatio < 0.5) {
+					// Tall diagrams: reset to top, center horizontally
 					modalBody.scrollTop = 0;
+					if (contentWidth > modalWidth) {
+						modalBody.scrollLeft = (contentWidth - modalWidth) / 2;
+					}
+				} else if (aspectRatio > 2.0) {
+					// Wide diagrams: reset to left, center vertically
+					modalBody.scrollLeft = 0;
+					if (contentHeight > modalHeight) {
+						modalBody.scrollTop = (contentHeight - modalHeight) / 2;
+					}
 				} else {
 					// Roughly square diagrams: center both directions if larger than viewport
 					if (contentWidth > modalWidth) {
