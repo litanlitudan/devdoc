@@ -437,6 +437,241 @@
 		.download-link:hover {
 			text-decoration: underline;
 		}
+
+		/* Mermaid diagram modal styles */
+		.mermaid-modal {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: rgba(0, 0, 0, 0.9);
+			z-index: 100000;
+			backdrop-filter: blur(4px);
+			animation: fadeIn 0.2s ease;
+		}
+
+		.mermaid-modal.active {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+			}
+			to {
+				opacity: 1;
+			}
+		}
+
+		.mermaid-modal-content {
+			position: relative;
+			width: 90vw;
+			min-width: 1200px;
+			max-width: 95vw;
+			height: 90vh;
+			max-height: 95vh;
+			background: white;
+			border-radius: 8px;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+		}
+
+		/* Responsive adjustments for smaller screens */
+		@media screen and (max-width: 1280px) {
+			.mermaid-modal-content {
+				min-width: 90vw;
+			}
+		}
+
+		@media screen and (max-width: 768px) {
+			.mermaid-modal-content {
+				width: 95vw;
+				min-width: unset;
+				height: 95vh;
+			}
+		}
+
+		.mermaid-modal-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 12px 16px;
+			background: #f6f8fa;
+			border-bottom: 1px solid #d0d7de;
+		}
+
+		.mermaid-modal-title {
+			font-size: 14px;
+			font-weight: 600;
+			color: #24292f;
+			margin: 0;
+		}
+
+		.mermaid-modal-controls {
+			display: flex;
+			gap: 8px;
+			align-items: center;
+		}
+
+		.mermaid-zoom-control {
+			display: flex;
+			gap: 4px;
+			background: white;
+			border: 1px solid #d0d7de;
+			border-radius: 6px;
+			padding: 2px;
+		}
+
+		.mermaid-zoom-btn,
+		.mermaid-close-btn {
+			background: transparent;
+			border: none;
+			cursor: pointer;
+			padding: 6px 10px;
+			font-size: 14px;
+			color: #24292f;
+			border-radius: 4px;
+			transition: all 0.2s ease;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.mermaid-zoom-btn:hover {
+			background: #f3f4f6;
+		}
+
+		.mermaid-zoom-btn:active {
+			background: #e1e4e8;
+		}
+
+		.mermaid-zoom-level {
+			padding: 6px 8px;
+			font-size: 12px;
+			color: #57606a;
+			min-width: 48px;
+			text-align: center;
+			font-family: 'SF Mono', Monaco, monospace;
+		}
+
+		.mermaid-close-btn {
+			background: #ffffff;
+			border: 1px solid #d0d7de;
+			padding: 6px 12px;
+			font-size: 12px;
+			font-weight: 500;
+		}
+
+		.mermaid-close-btn:hover {
+			background: #f3f4f6;
+			border-color: #c1c7cd;
+		}
+
+		.mermaid-modal-body {
+			flex: 1;
+			overflow: auto;
+			background: #ffffff;
+			position: relative;
+			cursor: grab;
+			display: flex;
+			align-items: flex-start;
+			justify-content: center;
+		}
+
+		.mermaid-modal-body:active {
+			cursor: grabbing;
+		}
+
+		.mermaid-modal-body.panning {
+			cursor: grabbing;
+		}
+
+		.mermaid-modal-diagram-wrapper {
+			padding: 20px 40px;
+			display: inline-block;
+			min-width: 100%;
+			min-height: 100%;
+			box-sizing: border-box;
+		}
+
+		.mermaid-modal-diagram-inner {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: calc(100vh - 120px);
+		}
+
+		.mermaid-modal-diagram {
+			transform-origin: top center;
+			transition: transform 0.2s ease;
+			display: inline-block;
+		}
+
+		.mermaid-modal-diagram .mermaid {
+			margin: 0;
+			padding: 0;
+			border: none;
+			box-shadow: none;
+			transform-origin: top center;
+		}
+
+		.mermaid-modal-diagram .mermaid:hover {
+			border: none;
+			background: transparent;
+			box-shadow: none;
+			transform: none;
+		}
+
+		.mermaid-modal-diagram .mermaid::after {
+			display: none;
+		}
+
+		/* Make mermaid diagrams clickable */
+		.markdown-body .mermaid {
+			cursor: pointer;
+			transition: all 0.2s ease;
+			border: 2px solid transparent;
+			border-radius: 6px;
+			padding: 8px;
+			margin: 16px 0;
+		}
+
+		.markdown-body .mermaid:hover {
+			border-color: #0969da;
+			background: #f6f8fa;
+			box-shadow: 0 4px 12px rgba(9, 105, 218, 0.15);
+			transform: translateY(-2px);
+		}
+
+		/* Add zoom icon hint on hover */
+		.markdown-body .mermaid::after {
+			content: '🔍';
+			position: absolute;
+			top: 8px;
+			right: 8px;
+			opacity: 0;
+			transition: opacity 0.2s ease;
+			font-size: 18px;
+			background: white;
+			border-radius: 4px;
+			padding: 4px 8px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		}
+
+		.markdown-body .mermaid {
+			position: relative;
+		}
+
+		.markdown-body .mermaid:hover::after {
+			opacity: 1;
+		}
+
 		/* Set explicit base size for header to prevent inheritance */
 		header {
 			margin-bottom: 20px;
@@ -572,6 +807,32 @@
 <hr></header>
 {{{content}}}
 </article>
+
+<!-- Mermaid Zoom Modal -->
+<div class="mermaid-modal" id="mermaidModal">
+	<div class="mermaid-modal-content">
+		<div class="mermaid-modal-header">
+			<h3 class="mermaid-modal-title">Diagram Viewer</h3>
+			<div class="mermaid-modal-controls">
+				<div class="mermaid-zoom-control">
+					<button class="mermaid-zoom-btn" id="zoomOut" title="Zoom out (-)">−</button>
+					<div class="mermaid-zoom-level" id="zoomLevel">100%</div>
+					<button class="mermaid-zoom-btn" id="zoomIn" title="Zoom in (+)">+</button>
+					<button class="mermaid-zoom-btn" id="zoomReset" title="Reset zoom (0)">⊙</button>
+				</div>
+				<button class="mermaid-close-btn" id="closeModal">Close</button>
+			</div>
+		</div>
+		<div class="mermaid-modal-body" id="modalBody">
+			<div class="mermaid-modal-diagram-wrapper">
+				<div class="mermaid-modal-diagram-inner">
+					<div class="mermaid-modal-diagram" id="modalDiagram"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
 		// Initialize Mermaid
@@ -580,6 +841,240 @@
 			theme: 'default',
 			securityLevel: 'loose'
 		});
+
+		// Mermaid diagram zoom modal functionality
+		const modal = document.getElementById('mermaidModal');
+		const modalDiagram = document.getElementById('modalDiagram');
+		const modalBody = document.getElementById('modalBody');
+		const closeBtn = document.getElementById('closeModal');
+		const zoomInBtn = document.getElementById('zoomIn');
+		const zoomOutBtn = document.getElementById('zoomOut');
+		const zoomResetBtn = document.getElementById('zoomReset');
+		const zoomLevelDisplay = document.getElementById('zoomLevel');
+
+		let currentZoom = 1.0;
+		let currentDiagram = null;
+		let isPanning = false;
+		let startX = 0;
+		let startY = 0;
+		let scrollLeft = 0;
+		let scrollTop = 0;
+
+		// Make all mermaid diagrams clickable
+		document.querySelectorAll('.markdown-body .mermaid').forEach(diagram => {
+			diagram.addEventListener('click', function() {
+				openMermaidModal(this);
+			});
+
+			// Keyboard support
+			diagram.setAttribute('tabindex', '0');
+			diagram.setAttribute('role', 'button');
+			diagram.setAttribute('aria-label', 'Click to zoom diagram');
+
+			diagram.addEventListener('keydown', function(e) {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					openMermaidModal(this);
+				}
+			});
+		});
+
+		function openMermaidModal(diagramElement) {
+			// Clone the diagram content
+			const clonedDiagram = diagramElement.cloneNode(true);
+			modalDiagram.innerHTML = '';
+			modalDiagram.appendChild(clonedDiagram);
+			currentDiagram = clonedDiagram;
+
+			// Set initial zoom to 150% for better visibility
+			currentZoom = 1.5;
+			updateZoom();
+
+			// Show modal
+			modal.classList.add('active');
+			document.body.style.overflow = 'hidden';
+
+			// Center the diagram after modal opens
+			setTimeout(() => {
+				const modalWidth = modalBody.clientWidth;
+				const modalHeight = modalBody.clientHeight;
+				const contentWidth = modalBody.scrollWidth;
+				const contentHeight = modalBody.scrollHeight;
+
+				// Center horizontally and vertically if content is larger than viewport
+				if (contentWidth > modalWidth) {
+					modalBody.scrollLeft = (contentWidth - modalWidth) / 2;
+				}
+				if (contentHeight > modalHeight) {
+					modalBody.scrollTop = (contentHeight - modalHeight) / 2;
+				}
+			}, 100);
+		}
+
+		function closeMermaidModal() {
+			modal.classList.remove('active');
+			document.body.style.overflow = '';
+			currentDiagram = null;
+		}
+
+		function updateZoom() {
+			if (currentDiagram) {
+				currentDiagram.style.transform = `scale(${currentZoom})`;
+				zoomLevelDisplay.textContent = Math.round(currentZoom * 100) + '%';
+
+				// Ensure the wrapper accounts for the scaled size
+				const wrapper = currentDiagram.parentElement;
+				if (wrapper && currentZoom > 1) {
+					// Force wrapper to expand to accommodate scaled content
+					wrapper.style.minHeight = `${currentZoom * 100}%`;
+				} else if (wrapper) {
+					wrapper.style.minHeight = 'calc(100vh - 120px)';
+				}
+			}
+		}
+
+		function zoomIn() {
+			const prevZoom = currentZoom;
+			currentZoom = Math.min(currentZoom + 0.25, 5.0);
+
+			// Maintain relative scroll position
+			const centerX = modalBody.scrollLeft + modalBody.clientWidth / 2;
+			const centerY = modalBody.scrollTop + modalBody.clientHeight / 2;
+
+			updateZoom();
+
+			// Adjust scroll to maintain the same center point
+			if (prevZoom !== currentZoom) {
+				const scale = currentZoom / prevZoom;
+				modalBody.scrollLeft = centerX * scale - modalBody.clientWidth / 2;
+				modalBody.scrollTop = centerY * scale - modalBody.clientHeight / 2;
+			}
+		}
+
+		function zoomOut() {
+			const prevZoom = currentZoom;
+			currentZoom = Math.max(currentZoom - 0.25, 0.25);
+
+			// Maintain relative scroll position
+			const centerX = modalBody.scrollLeft + modalBody.clientWidth / 2;
+			const centerY = modalBody.scrollTop + modalBody.clientHeight / 2;
+
+			updateZoom();
+
+			// Adjust scroll to maintain the same center point
+			if (prevZoom !== currentZoom) {
+				const scale = currentZoom / prevZoom;
+				modalBody.scrollLeft = centerX * scale - modalBody.clientWidth / 2;
+				modalBody.scrollTop = centerY * scale - modalBody.clientHeight / 2;
+			}
+		}
+
+		function resetZoom() {
+			currentZoom = 1.5;
+			updateZoom();
+
+			// Center the diagram after reset
+			setTimeout(() => {
+				const modalWidth = modalBody.clientWidth;
+				const modalHeight = modalBody.clientHeight;
+				const contentWidth = modalBody.scrollWidth;
+				const contentHeight = modalBody.scrollHeight;
+
+				// Center horizontally and vertically if content is larger than viewport
+				if (contentWidth > modalWidth) {
+					modalBody.scrollLeft = (contentWidth - modalWidth) / 2;
+				}
+				if (contentHeight > modalHeight) {
+					modalBody.scrollTop = (contentHeight - modalHeight) / 2;
+				}
+			}, 50);
+		}
+
+		// Event listeners
+		closeBtn.addEventListener('click', closeMermaidModal);
+		zoomInBtn.addEventListener('click', zoomIn);
+		zoomOutBtn.addEventListener('click', zoomOut);
+		zoomResetBtn.addEventListener('click', resetZoom);
+
+		// Close on background click
+		modal.addEventListener('click', function(e) {
+			if (e.target === modal) {
+				closeMermaidModal();
+			}
+		});
+
+		// Keyboard shortcuts
+		document.addEventListener('keydown', function(e) {
+			if (!modal.classList.contains('active')) return;
+
+			switch(e.key) {
+				case 'Escape':
+					closeMermaidModal();
+					break;
+				case '+':
+				case '=':
+					e.preventDefault();
+					zoomIn();
+					break;
+				case '-':
+				case '_':
+					e.preventDefault();
+					zoomOut();
+					break;
+				case '0':
+					e.preventDefault();
+					resetZoom();
+					break;
+			}
+		});
+
+		// Pan functionality with mouse drag
+		modalBody.addEventListener('mousedown', function(e) {
+			// Don't pan if clicking on controls
+			if (e.target.closest('.mermaid-modal-controls') ||
+			    e.target.closest('.mermaid-close-btn') ||
+			    e.target.closest('.mermaid-zoom-btn')) {
+				return;
+			}
+
+			isPanning = true;
+			modalBody.classList.add('panning');
+			startX = e.clientX;
+			startY = e.clientY;
+			scrollLeft = modalBody.scrollLeft;
+			scrollTop = modalBody.scrollTop;
+			e.preventDefault();
+		});
+
+		document.addEventListener('mousemove', function(e) {
+			if (!isPanning) return;
+			e.preventDefault();
+
+			const deltaX = e.clientX - startX;
+			const deltaY = e.clientY - startY;
+
+			modalBody.scrollLeft = scrollLeft - deltaX;
+			modalBody.scrollTop = scrollTop - deltaY;
+		});
+
+		document.addEventListener('mouseup', function() {
+			if (isPanning) {
+				isPanning = false;
+				modalBody.classList.remove('panning');
+			}
+		});
+
+		// Mouse wheel zoom
+		modalBody.addEventListener('wheel', function(e) {
+			if (e.ctrlKey || e.metaKey) {
+				e.preventDefault();
+				if (e.deltaY < 0) {
+					zoomIn();
+				} else {
+					zoomOut();
+				}
+			}
+		}, { passive: false });
 
 		// Initialize highlight.js for code blocks
 		window.addEventListener('load', function() {
