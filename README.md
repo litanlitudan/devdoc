@@ -49,13 +49,13 @@ $ pip install ai-edge-model-explorer-adapter>=0.1.13  # For MLIR parsing
 
 ```shell
 # Basic usage - serve current directory
-$ devdoc
+$ devdoc serve
 
 # Serve specific directory or file
-$ devdoc path/to/docs
+$ devdoc serve path/to/docs
 
 # Advanced usage with custom port and network access
-$ devdoc path/to/docs -p 8642 -a 0.0.0.0
+$ devdoc serve path/to/docs -p 8642 -a 0.0.0.0
 ```
 
 ### Command Options
@@ -113,25 +113,25 @@ $ devdoc graph:onnx model.onnx --output model_with_shapes.onnx
 ### Local Documentation Server
 ```shell
 # Serve your project's documentation
-$ devdoc ./docs -p 3000
+$ devdoc serve ./docs -p 3000
 ```
 
 ### Remote Access for Team Sharing
 ```shell
 # Make documentation available to your network
-$ devdoc ./docs -p 8642 -a 0.0.0.0
+$ devdoc serve ./docs -p 8642 -a 0.0.0.0
 ```
 
 ### Keep Server Running in Background
 ```shell
 # Run server as a background process (Unix/Linux/macOS)
-$ nohup devdoc ./docs -p 8642 -a 0.0.0.0 &
+$ nohup devdoc serve ./docs -p 8642 -a 0.0.0.0 &
 ```
 
 ### Visualize AI Models
 ```shell
 # Serve directory containing ONNX and MLIR files
-$ devdoc ./models
+$ devdoc serve ./models
 
 # Then open in browser:
 # - http://localhost:8008/model.onnx - Interactive ONNX graph
@@ -143,13 +143,13 @@ $ devdoc ./models
 ### Port Already in Use
 If you see an error about the port being in use, try a different port:
 ```shell
-$ devdoc -p 3001
+$ devdoc serve -p 3001
 ```
 
 ### External Access Not Working
 Ensure your firewall allows connections on the specified port and use `-a 0.0.0.0`:
 ```shell
-$ devdoc -p 8642 -a 0.0.0.0
+$ devdoc serve -p 8642 -a 0.0.0.0
 ```
 
 ### Python Dependencies Not Found
