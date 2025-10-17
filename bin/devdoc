@@ -28,14 +28,14 @@ const resolveLegacyCli = () => legacyCandidates.find((candidate) => existsSync(c
 
 const resolveCliPath = () => {
   // Default to new oclif CLI unless explicitly disabled
-  const wantsLegacyCli = toBoolean(process.env.MARKSERV_USE_LEGACY_CLI);
+  const wantsLegacyCli = toBoolean(process.env.DEVDOC_USE_LEGACY_CLI);
 
   if (wantsLegacyCli) {
     const legacyCli = resolveLegacyCli();
     if (legacyCli) {
       return legacyCli;
     }
-    console.warn('Warning: MARKSERV_USE_LEGACY_CLI is set but the legacy CLI was not found. Falling back to new CLI.');
+    console.warn('Warning: DEVDOC_USE_LEGACY_CLI is set but the legacy CLI was not found. Falling back to new CLI.');
   }
 
   // Try new CLI first (default behavior)
@@ -50,7 +50,7 @@ const resolveCliPath = () => {
     return legacyCli;
   }
 
-  throw new Error('Unable to locate markserv CLI entrypoint. Run `npm run build` before invoking the CLI.');
+  throw new Error('Unable to locate devdoc CLI entrypoint. Run `npm run build` before invoking the CLI.');
 };
 
 const cliPath = resolveCliPath();
@@ -71,6 +71,6 @@ child.on('exit', (code) => {
 
 // Handle errors
 child.on('error', (err) => {
-  console.error('Failed to start markserv:', err);
+  console.error('Failed to start devdoc:', err);
   process.exit(1);
 });

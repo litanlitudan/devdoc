@@ -1,4 +1,4 @@
-# Markserv Installation Guide
+# Devdoc Installation Guide
 
 ## Prerequisites
 
@@ -15,10 +15,10 @@
 
 ```shell
 # Clone the repository
-$ git clone https://github.com/litanlitudan/markserv.git
+$ git clone https://github.com/litanlitudan/devdoc.git
 
-# Navigate to the markserv directory
-$ cd markserv
+# Navigate to the devdoc directory
+$ cd devdoc
 
 # Install dependencies
 $ npm install
@@ -26,7 +26,7 @@ $ npm install
 # Build the project
 $ npm run build
 
-# Link the package globally to use 'markserv' command
+# Link the package globally to use 'devdoc' command
 $ npm link
 ```
 
@@ -49,13 +49,13 @@ $ pip install ai-edge-model-explorer-adapter>=0.1.13  # For MLIR parsing
 
 ```shell
 # Basic usage - serve current directory
-$ markserv
+$ devdoc
 
 # Serve specific directory or file
-$ markserv path/to/docs
+$ devdoc path/to/docs
 
 # Advanced usage with custom port and network access
-$ markserv path/to/docs -p 8642 -a 0.0.0.0
+$ devdoc path/to/docs -p 8642 -a 0.0.0.0
 ```
 
 ### Command Options
@@ -69,26 +69,26 @@ $ markserv path/to/docs -p 8642 -a 0.0.0.0
 
 ```shell
 # Build the project
-$ markserv dev:build
+$ devdoc dev:build
 
 # Run tests
-$ markserv dev:test
+$ devdoc dev:test
 
 # Lint code
-$ markserv dev:lint
+$ devdoc dev:lint
 
 # Clean build artifacts
-$ markserv dev:clean
+$ devdoc dev:clean
 ```
 
 ### AI Model Processing Commands
 
 ```shell
 # Parse MLIR file to graph format
-$ markserv graph:mlir model.mlir --output graph.json
+$ devdoc graph:mlir model.mlir --output graph.json
 
 # Infer shapes for ONNX model
-$ markserv graph:onnx model.onnx --output model_with_shapes.onnx
+$ devdoc graph:onnx model.onnx --output model_with_shapes.onnx
 ```
 
 ## Features
@@ -113,25 +113,25 @@ $ markserv graph:onnx model.onnx --output model_with_shapes.onnx
 ### Local Documentation Server
 ```shell
 # Serve your project's documentation
-$ markserv ./docs -p 3000
+$ devdoc ./docs -p 3000
 ```
 
 ### Remote Access for Team Sharing
 ```shell
 # Make documentation available to your network
-$ markserv ./docs -p 8642 -a 0.0.0.0
+$ devdoc ./docs -p 8642 -a 0.0.0.0
 ```
 
 ### Keep Server Running in Background
 ```shell
 # Run server as a background process (Unix/Linux/macOS)
-$ nohup markserv ./docs -p 8642 -a 0.0.0.0 &
+$ nohup devdoc ./docs -p 8642 -a 0.0.0.0 &
 ```
 
 ### Visualize AI Models
 ```shell
 # Serve directory containing ONNX and MLIR files
-$ markserv ./models
+$ devdoc ./models
 
 # Then open in browser:
 # - http://localhost:8008/model.onnx - Interactive ONNX graph
@@ -143,13 +143,13 @@ $ markserv ./models
 ### Port Already in Use
 If you see an error about the port being in use, try a different port:
 ```shell
-$ markserv -p 3001
+$ devdoc -p 3001
 ```
 
 ### External Access Not Working
 Ensure your firewall allows connections on the specified port and use `-a 0.0.0.0`:
 ```shell
-$ markserv -p 8642 -a 0.0.0.0
+$ devdoc -p 8642 -a 0.0.0.0
 ```
 
 ### Python Dependencies Not Found

@@ -1,7 +1,7 @@
 # MLIR Location Information (loc) Support
 
 > **Note:** This document describes the previous implementation using `ai-edge-model-explorer-adapter`.
-> As of the latest version, markserv uses a direct Python parser (`scripts/parse_mlir.py`) that does not require the adapter.
+> As of the latest version, devdoc uses a direct Python parser (`scripts/parse_mlir.py`) that does not require the adapter.
 > Location information support in the new parser would need to be implemented separately.
 
 ## Executive Summary

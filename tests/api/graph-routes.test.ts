@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 import request from 'supertest'
 import path from 'node:path'
-import { createMarkservApp } from '../../dist/lib/server.js'
+import { createDevdocApp } from '../../dist/lib/server.js'
 
 vi.mock('../../lib/api/services/mlir.js', () => ({
   parseMlirToGraph: vi.fn(),
@@ -13,7 +13,7 @@ const describeIf = supertestAvailable ? describe : describe.skip
 const itIf = supertestAvailable ? it : it.skip
 
 describeIf('Graph API Routes', () => {
-  const app = createMarkservApp({
+  const app = createDevdocApp({
     dir: path.join(process.cwd(), 'tests'),
     port: 0,
     address: '127.0.0.1',

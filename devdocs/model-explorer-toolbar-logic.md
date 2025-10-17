@@ -484,7 +484,7 @@ Is hideToolBar = true?
 
 ## Notes for Integration
 
-When integrating Model Explorer into Markserv:
+When integrating Model Explorer into Devdoc:
 
 1. **Default Configuration**: If no config is provided, toolbar will show with all items visible
 2. **Minimal UI Mode**: Set `hideToolBar: true` for document-focused view

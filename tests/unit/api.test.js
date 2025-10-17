@@ -3,7 +3,7 @@ import request from 'supertest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createMarkservApp } from '../../dist/lib/server.js'
+import { createDevdocApp } from '../../dist/lib/server.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -19,7 +19,7 @@ const baseFlags = {
 	browser: false,
 }
 
-const app = createMarkservApp({ ...baseFlags })
+const app = createDevdocApp({ ...baseFlags })
 
 const supertestAvailable = process.env.MARKSERV_ENABLE_SUPERTEST === '1'
 

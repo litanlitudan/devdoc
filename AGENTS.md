@@ -2,14 +2,14 @@
 
 ## Project Structure & Module Organization
 - `lib/` TypeScript source (edit here). `dist/` is compiled output (do not edit).
-- `bin/` CLI entry points (`markserv`, `readme`).
+- `bin/` CLI entry points (`devdoc`, `readme`).
 - `tests/` unit tests and `tests/fixtures/` sample content.
 - `scripts/` helper Bash/Python (MLIR/ONNX tooling, build helpers).
 - `media/`, `lib/templates/`, `lib/icons/` static assets and templates.
 
 ## Build, Test, and Development Commands
 - `npm run build` — compile TS to `dist/` and run post-build.
-- `npm start` — run Markserv on port `8642` from `dist/`.
+- `npm start` — run Devdoc on port `8642` from `dist/`.
 - `npm run dev` — kill port, build once, start with Node watch.
 - `npm test` — build then run Vitest; `npm run test:watch` / `test:ui` for dev.
 - `npm run cover` — run tests with coverage.

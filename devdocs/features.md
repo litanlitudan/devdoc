@@ -1,4 +1,4 @@
-# Markserv Feature Enhancements
+# Devdoc Feature Enhancements
 
 **Author:** Tan Li
 **Generated:** September 30, 2025
@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-This document comprehensively catalogs the major features and capabilities added to Markserv through 43 commits spanning September 19-30, 2025. These enhancements transform Markserv from a basic markdown server into a comprehensive development documentation platform with advanced rendering, interactive features, file management capabilities, and modern ES module architecture.
+This document comprehensively catalogs the major features and capabilities added to Devdoc through 43 commits spanning September 19-30, 2025. These enhancements transform Devdoc from a basic markdown server into a comprehensive development documentation platform with advanced rendering, interactive features, file management capabilities, and modern ES module architecture.
 
 **Key Highlights:**
 - ⚡ **ES Module Migration** - Complete modernization from CommonJS to ES modules
@@ -173,7 +173,7 @@ export default { init };
     "node": ">=18.0.0"
   },
   "bin": {
-    "markserv": "bin/markserv",
+    "devdoc": "bin/devdoc",
     "readme": "bin/readme"
   }
 }
@@ -198,7 +198,7 @@ export default { init };
 - `lib/server.js` - ES module server core (408 lines modified)
 - `lib/readme.js` - ES module README finder (120 lines modified)
 - `lib/splash.js` - ES module splash screen (21 lines modified)
-- `bin/markserv` - ES module bin wrapper (34 new lines)
+- `bin/devdoc` - ES module bin wrapper (34 new lines)
 - `bin/readme` - ES module bin wrapper (34 new lines)
 
 #### Test Migration
@@ -209,7 +209,7 @@ export default { init };
 - `tests/implant-file.test.js`
 - `tests/implant-less.test.js`
 - `tests/links.test.js`
-- `tests/markserv-cli-*.test.js` (5 files)
+- `tests/devdoc-cli-*.test.js` (5 files)
 - `tests/service.test.js`
 - `tests/slugify-header-links.test.js`
 - `tests/tables.test.js`
@@ -390,7 +390,7 @@ npm test
 **Date:** September 30, 2025
 
 ### Overview
-Implemented a comprehensive line numbering system that brings GitHub-like code browsing capabilities to Markserv. This is the most significant UI enhancement, affecting all code rendering across the platform.
+Implemented a comprehensive line numbering system that brings GitHub-like code browsing capabilities to Devdoc. This is the most significant UI enhancement, affecting all code rendering across the platform.
 
 ### Core Capabilities
 
@@ -411,7 +411,7 @@ Implemented a comprehensive line numbering system that brings GitHub-like code b
 - **Deep linking support** - URLs automatically scroll to specified line on page load
 
 #### 1.3 CSS Architecture
-Enhanced stylesheet (`lib/templates/markserv.css`) with:
+Enhanced stylesheet (`lib/templates/devdoc.css`) with:
 - `.code-block-container` - wrapper for all code blocks
 - `.line-numbered-code` - grid-based layout for line numbers + code
 - `.line-number` - interactive line number styling with hover effects
@@ -434,7 +434,7 @@ Enhanced stylesheet (`lib/templates/markserv.css`) with:
 ### Files Modified
 - `lib/server.js` - Core rendering logic (308 line changes)
 - `lib/templates/markdown.html` - Interactive JavaScript (195 new lines)
-- `lib/templates/markserv.css` - Styling system (3 new lines)
+- `lib/templates/devdoc.css` - Styling system (3 new lines)
 - `tests/linenumber.test.js` - Comprehensive test coverage (140 new lines)
 
 ---
@@ -962,7 +962,7 @@ Toggle between normal and expanded view modes for optimal reading experience.
 
 ### Files Modified
 - `lib/templates/markdown.html` - Toggle JavaScript
-- `lib/templates/markserv.css` - Responsive CSS
+- `lib/templates/devdoc.css` - Responsive CSS
 - Multiple refinement commits for consistent sizing
 
 ---
@@ -1101,11 +1101,11 @@ Comprehensive test suite covering all major features:
 ### CLI Enhancements
 All features work with existing CLI flags:
 ```bash
-markserv -p 8080          # Custom port
-markserv -a 0.0.0.0       # Bind to all interfaces
-markserv -s               # Silent mode
-markserv -v               # Verbose logging
-markserv -dir /docs       # Custom directory
+devdoc -p 8080          # Custom port
+devdoc -a 0.0.0.0       # Bind to all interfaces
+devdoc -s               # Silent mode
+devdoc -v               # Verbose logging
+devdoc -dir /docs       # Custom directory
 ```
 
 ### Environment Variables
@@ -1145,29 +1145,29 @@ markserv -dir /docs       # Custom directory
 
 #### Getting Started
 ```bash
-npm install -g markserv
-markserv README.md
+npm install -g devdoc
+devdoc README.md
 ```
 
 #### Explore Features
 ```bash
 # Try line numbering with code files
-markserv src/
+devdoc src/
 
 # View MLIR compiler IR
-markserv compiler_output.mlir
+devdoc compiler_output.mlir
 
 # Check diff files with syntax highlighting
-markserv changes.diff
+devdoc changes.diff
 
 # Visualize build logs with colors
-markserv build.log
+devdoc build.log
 
 # View markdown with Mermaid diagrams
-markserv architecture.md
+devdoc architecture.md
 
 # Enable uploads for collaboration
-markserv --upload docs/
+devdoc --upload docs/
 ```
 
 ---
@@ -1239,7 +1239,7 @@ markserv --upload docs/
   - **URL-based**: `/git/diff?from=main&to=feature-branch`
   - **Markdown syntax**: `[View branch diff](git://diff/main...feature-branch)`
   - **UI widget**: Branch comparison dropdown in header
-  - **CLI command**: `markserv --git-diff main feature-branch`
+  - **CLI command**: `devdoc --git-diff main feature-branch`
 - **Advanced capabilities**:
   - Ignore whitespace changes
   - Show/hide binary file changes
@@ -1294,7 +1294,7 @@ markserv --upload docs/
 
 **Configuration**:
 ```javascript
-// markserv.config.js
+// devdoc.config.js
 {
   git: {
     enableDiff: true,
@@ -1448,7 +1448,7 @@ View the MLIR IR:
 
 **Example Integration**:
 ```javascript
-// markserv.config.js
+// devdoc.config.js
 {
   analytics: {
     enabled: true,
@@ -1574,7 +1574,7 @@ We welcome contributions in these areas:
 
 ## Conclusion
 
-These enhancements transform Markserv into a comprehensive development documentation platform. The combination of ES module architecture, interactive features, extensive language support, specialized file format rendering, and modern UI patterns creates a professional tool suitable for personal projects, team documentation, compiler development, and enterprise deployments.
+These enhancements transform Devdoc into a comprehensive development documentation platform. The combination of ES module architecture, interactive features, extensive language support, specialized file format rendering, and modern UI patterns creates a professional tool suitable for personal projects, team documentation, compiler development, and enterprise deployments.
 
 **Key Achievements:**
 - ✅ **ES Module Architecture** - complete modernization from CommonJS

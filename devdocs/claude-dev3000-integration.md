@@ -1,6 +1,6 @@
-# Using dev3000 with markserv (Optional)
+# Using dev3000 with devdoc (Optional)
 
-This document explains how to optionally integrate **dev3000** with markserv for enhanced AI-assisted debugging via Claude Code.
+This document explains how to optionally integrate **dev3000** with devdoc for enhanced AI-assisted debugging via Claude Code.
 
 ## Overview
 
@@ -12,14 +12,14 @@ This document explains how to optionally integrate **dev3000** with markserv for
 - Visual state changes and screenshots
 - Exposes a Model Context Protocol (MCP) server for AI agents
 
-**When is dev3000 useful for markserv?**
+**When is dev3000 useful for devdoc?**
 
 - Debugging rendering issues with markdown/HTML templates
 - Investigating browser-side JavaScript errors
 - Analyzing network requests for static assets
 - Troubleshooting live-reload functionality
 
-**Note:** dev3000 is most valuable for complex frontend applications. For basic markserv usage, the built-in live-reload and standard debugging tools may be sufficient.
+**Note:** dev3000 is most valuable for complex frontend applications. For basic devdoc usage, the built-in live-reload and standard debugging tools may be sufficient.
 
 ## Quick Start
 
@@ -27,12 +27,12 @@ This document explains how to optionally integrate **dev3000** with markserv for
 # Install dev3000 globally (one-time setup)
 make install-dev3000
 
-# Start markserv with dev3000 monitoring
+# Start devdoc with dev3000 monitoring
 make dev
 ```
 
 This single command will:
-- Start markserv on port 8642
+- Start devdoc on port 8642
 - Launch your browser automatically
 - Set up the MCP server for Claude Code integration
 - Monitor server logs, browser console, and network traffic
@@ -135,12 +135,12 @@ lsof -i :3684
 **Setup:**
 
 ```bash
-# Start markserv with dev3000 monitoring
+# Start devdoc with dev3000 monitoring
 make dev
 ```
 
 This will:
-- Start markserv on http://localhost:8642
+- Start devdoc on http://localhost:8642
 - Launch your browser automatically
 - Set up MCP server on http://localhost:3684
 
@@ -154,7 +154,7 @@ claude mcp add --transport http dev3000 http://localhost:3684
 
 1. **Navigate** in your browser to the problematic markdown file
 
-2. **Launch Claude Code** in the markserv directory:
+2. **Launch Claude Code** in the devdoc directory:
    ```bash
    claude
    ```
@@ -179,7 +179,7 @@ claude mcp add --transport http dev3000 http://localhost:3684
 
 6. **Review and approve** Claude's proposed changes
 
-## Best Practices for markserv + dev3000
+## Best Practices for devdoc + dev3000
 
 ### When to Use dev3000
 
@@ -203,7 +203,7 @@ claude mcp add --transport http dev3000 http://localhost:3684
 1. **Register the MCP server once** - Use `claude mcp add --transport http dev3000 http://localhost:3684` for permanent setup across all projects
 2. **Rebuild when needed** - Run `npm run build` before restarting `make dev` if you've modified TypeScript files
 3. **Use the Makefile** - `make dev` is the simplest way to start everything with proper monitoring
-4. **Leverage `CLAUDE.md`** - Guide Claude about markserv-specific patterns and conventions
+4. **Leverage `CLAUDE.md`** - Guide Claude about devdoc-specific patterns and conventions
 5. **Ask specific questions** - "What's causing the 404 for this asset?" works better than "fix my app"
 6. **Use dev3000 for tricky bugs** - Especially useful for hard-to-reproduce browser issues or timing-related problems
 
@@ -215,7 +215,7 @@ claude mcp add --transport http dev3000 http://localhost:3684
 # Install dev3000 globally (one-time)
 make install-dev3000
 
-# Start markserv with dev3000 monitoring
+# Start devdoc with dev3000 monitoring
 make dev
 ```
 
@@ -246,7 +246,7 @@ When you run `make dev`, dev3000 displays a TUI showing:
 
 Open in your browser for detailed view:
 ```text
-http://localhost:3684/logs?project=markserv
+http://localhost:3684/logs?project=devdoc
 ```
 
 Shows comprehensive logs including:
@@ -268,7 +268,7 @@ This shows dev3000 internals + your app's output.
 
 Check timestamped log files:
 ```bash
-tail -f ~/.d3k/logs/markserv-d3k.log
+tail -f ~/.d3k/logs/devdoc-d3k.log
 ```
 
 ## Additional Resources
@@ -276,4 +276,4 @@ tail -f ~/.d3k/logs/markserv-d3k.log
 - [dev3000 GitHub Repository](https://github.com/vercel-labs/dev3000)
 - [Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io/)
-- [markserv CLAUDE.md](../CLAUDE.md) - Project-specific Claude Code guidance
+- [devdoc CLAUDE.md](../CLAUDE.md) - Project-specific Claude Code guidance

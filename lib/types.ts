@@ -16,7 +16,7 @@ export interface Flags {
 	[key: string]: any
 }
 
-export interface MarkservService {
+export interface DevdocService {
 	pid: number | undefined
 	httpServer: HttpServer
 	liveReloadServer?: {

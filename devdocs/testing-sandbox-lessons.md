@@ -10,10 +10,10 @@
 ## Role of the Sandbox
 - **Port restrictions**: The sandbox guards the host system, disallowing `listen(0.0.0.0)` calls by default; any code path that opens a port fails unless we stub or skip it.
 - **File-system isolation**: Some tests write fixtures; we make sure they clean up after themselves to avoid pollution.
-- **Process spawning**: The sandbox allows child processes but may restrict network activity, so we prefer in-process adapters (e.g., `createMarkservApp`).
+- **Process spawning**: The sandbox allows child processes but may restrict network activity, so we prefer in-process adapters (e.g., `createDevdocApp`).
 
 ## Practical Takeaways
-1. **Design for pure functions**: Share Express app creation logic (`createMarkservApp`) so tests can drive the app without starting the HTTP server.
+1. **Design for pure functions**: Share Express app creation logic (`createDevdocApp`) so tests can drive the app without starting the HTTP server.
 2. **Plan for fallbacks**: Tests that depend on networking need an opt-in switch or a mock layer to operate in restricted environments.
 3. **Document flags**: Add a note (`MARKSERV_ENABLE_SUPERTEST`) so contributors know how to enable the deeper coverage locally/CI while keeping sandbox runs stable.
 4. **Avoid re-implementing HTTP**: Maintaining fetch shims that perfectly mimic streaming is harder than reusing existing test helpers (supertest, superagent) when possible.

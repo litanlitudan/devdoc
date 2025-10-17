@@ -1,5 +1,5 @@
 /**
- * Serve command - Start the markserv development server
+ * Serve command - Start the devdoc development server
  *
  * This command wraps the existing server implementation with oclif,
  * maintaining full backward compatibility while providing a cleaner CLI interface.
@@ -7,14 +7,14 @@
 
 import { Command, Flags, Args } from '@oclif/core'
 import path from 'node:path'
-import markserv from '../../../lib/server.js'
+import devdoc from '../../../lib/server.js'
 import splash from '../../../lib/splash.js'
 import type { Flags as ServerFlags } from '../../../lib/types.js'
 import { logger, setLogLevel } from '../services/logger.js'
 import { loadConfig } from '../config.js'
 
 export default class Serve extends Command {
-	static override description = 'Start the markserv development server'
+	static override description = 'Start the devdoc development server'
 
 	static override examples = [
 		'<%= config.bin %> <%= command.id %>',
@@ -77,7 +77,7 @@ export default class Serve extends Command {
 			setLogLevel('silent')
 		}
 
-		logger.info('Starting markserv server...')
+		logger.info('Starting devdoc server...')
 
 		// Load configuration (merging config file with CLI flags)
 		const config = loadConfig({
@@ -112,7 +112,7 @@ export default class Serve extends Command {
 
 		try {
 			// Delegate to existing server implementation
-			await markserv.init(serverFlags)
+			await devdoc.init(serverFlags)
 		} catch (error: unknown) {
 			if (error instanceof Error) {
 				logger.error({ error }, 'Failed to start server')

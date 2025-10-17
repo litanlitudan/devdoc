@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import request from 'supertest'
-import { createMarkservApp } from '../../dist/lib/server.js'
+import { createDevdocApp } from '../../dist/lib/server.js'
 
-const app = createMarkservApp({
+const app = createDevdocApp({
 	dir: process.cwd(),
 	port: 0,
 	address: '127.0.0.1',

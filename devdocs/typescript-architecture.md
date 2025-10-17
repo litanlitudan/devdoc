@@ -22,7 +22,7 @@ We are committing to a **TypeScript-first** CLI and API architecture that builds
 ## Goals
 
 ### CLI Goals
-- Preserve all user-facing behaviors (`markserv serve`, live reload, analytics toggles) while providing a scalable command surface for new features
+- Preserve all user-facing behaviors (`devdoc serve`, live reload, analytics toggles) while providing a scalable command surface for new features
 - Centralize configuration, logging, and telemetry in TypeScript so CLI and server share types, error handling, and utilities
 - Offer first-class workflows for MLIR/ONNX interactions by wrapping existing scripts with typed adapters
 - Enable automated build tasks (build, lint, test, package) that can run locally or in CI via Make targets
@@ -47,7 +47,7 @@ We are committing to a **TypeScript-first** CLI and API architecture that builds
 ## Current State Snapshot
 
 ### CLI (Before Refactor)
-- `bin/markserv` → `dist/cli.js` → `lib/cli.ts` (yargs-based flags feeding `markserv.init(flags)`)
+- `bin/devdoc` → `dist/cli.js` → `lib/cli.ts` (yargs-based flags feeding `devdoc.init(flags)`)
 - Flags control port/address, verbosity, live reload, directory root, and browser opening
 - Tight coupling between CLI and server makes testing and extensibility difficult
 
@@ -69,7 +69,7 @@ We are committing to a **TypeScript-first** CLI and API architecture that builds
 
 ```mermaid
 graph TD
-    subgraph CLI["markserv CLI (oclif)"]
+    subgraph CLI["devdoc CLI (oclif)"]
         CMDServe[serve command]
         CMDGraph[graph commands]
         CMDDev[dev commands]
@@ -249,7 +249,7 @@ import { logger } from '../services/logger.js';
 import { ensureBuildArtifacts } from '../services/build.js';
 
 export default class Serve extends Command {
-  static description = 'Start the markserv development server';
+  static description = 'Start the devdoc development server';
 
   static flags = {
     port: Flags.integer({ char: 'p', default: 8080 }),
@@ -416,7 +416,7 @@ ci: install lint test build
 
 ### CLI: Serve Command
 1. Parse flags using oclif
-2. Load config from `.markservrc` and environment
+2. Load config from `.devdocrc` and environment
 3. Ensure build artifacts exist (trigger `npm run build` if needed)
 4. Launch Node server as child process with proper env
 5. Forward stdout/stderr with structured logging
@@ -441,7 +441,7 @@ ci: install lint test build
 7. Error middleware catches failures and returns structured errors
 
 ### Make Task Invocation
-1. CLI command (`markserv dev test`)
+1. CLI command (`devdoc dev test`)
 2. Resolve config and validate environment
 3. Execute Make target with proper flags
 4. Stream output logs with pino
@@ -461,9 +461,9 @@ ci: install lint test build
 
 ### Phase 1 — CLI Command Extraction
 - [ ] Recreate current CLI flags in oclif `serve` command
-- [ ] Internally call `markserv.init(flags)` to maintain compatibility
+- [ ] Internally call `devdoc.init(flags)` to maintain compatibility
 - [ ] Add regression tests using `@oclif/test` and vitest
-- [ ] Update `bin/markserv` to detect new command and fall back to legacy
+- [ ] Update `bin/devdoc` to detect new command and fall back to legacy
 - [ ] Feature flag rollout (`MARKSERV_USE_NEW_CLI=1`)
 
 ### Phase 2 — API Module Extraction
@@ -522,8 +522,8 @@ ci: install lint test build
 4. Generate sourcemaps for debugging
 
 ### Distribution Channels
-- **npm package**: Primary distribution (`npm install -g markserv`)
-- **npx**: Direct execution (`npx markserv serve`)
+- **npm package**: Primary distribution (`npm install -g devdoc`)
+- **npx**: Direct execution (`npx devdoc serve`)
 - **Docker**: Optional container with automated builds
 
 ### Version Management

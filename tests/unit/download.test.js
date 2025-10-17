@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import request from 'supertest'
 import { join } from 'node:path'
-import { createMarkservApp } from '../../dist/lib/server.js'
+import { createDevdocApp } from '../../dist/lib/server.js'
 
 const buildApp = (overrides = {}) =>
-	createMarkservApp({
+	createDevdocApp({
 		dir: process.cwd(),
 		port: 0,
 		address: '127.0.0.1',
@@ -42,7 +42,7 @@ describeIf('Download functionality', () => {
 		expect(response.status).toBe(200)
 		const html = response.text
 		expect(html).toContain('<pre><code class="language-json hljs">')
-		expect(html).toContain('&quot;name&quot;: &quot;markserv&quot;')
+		expect(html).toContain('&quot;name&quot;: &quot;devdoc&quot;')
 		expect(html).toContain('download-link')
 		expect(html).toContain('⬇ Download')
 		expect(html).toContain('package.json?download=true')
@@ -60,7 +60,7 @@ describeIf('Download functionality', () => {
 	itIf('should serve images directly without download page', async () => {
 		const app = buildApp({ dir: join(process.cwd(), 'media') })
 		const response = await request(app)
-			.get('/markserv-splash.png')
+			.get('/devdoc-splash.png')
 			.set('Accept', 'text/html')
 
 		expect(response.status).toBe(200)

@@ -32,13 +32,13 @@ vi.mock('../../src/cli/services/logger.js', () => {
 })
 
 import Serve from '../../src/cli/commands/serve.js'
-import markserv from '../../lib/server.js'
+import devdoc from '../../lib/server.js'
 
-const markservInit = (markserv.init ?? markserv.default?.init) as Mock
+const devdocInit = (devdoc.init ?? devdoc.default?.init) as Mock
 
 describe('Serve command metadata', () => {
 	it('has expected description and examples', () => {
-		expect(Serve.description).toBe('Start the markserv development server')
+		expect(Serve.description).toBe('Start the devdoc development server')
 		expect(Serve.examples).toContain('<%= config.bin %> <%= command.id %>')
 	})
 
@@ -68,11 +68,11 @@ describe('Serve command execution', () => {
 		vi.clearAllMocks()
 	})
 
-	it('passes flags to markserv.init', async () => {
+	it('passes flags to devdoc.init', async () => {
 		await Serve.run(['./docs', '--port', '3000', '--watch'])
 
-		expect(markservInit).toHaveBeenCalledTimes(1)
-		expect(markservInit).toHaveBeenCalledWith(
+		expect(devdocInit).toHaveBeenCalledTimes(1)
+		expect(devdocInit).toHaveBeenCalledWith(
 			expect.objectContaining({
 				port: '3000',
 				address: 'localhost',
@@ -88,15 +88,15 @@ describe('Serve command execution', () => {
 	it('normalizes paths when none provided', async () => {
 		await Serve.run([])
 
-		expect(markservInit).toHaveBeenCalledWith(
+		expect(devdocInit).toHaveBeenCalledWith(
 			expect.objectContaining({
 				dir: process.cwd(),
 			}),
 		)
 	})
 
-	it('surface errors from markserv.init', async () => {
-		markservInit.mockRejectedValueOnce(new Error('Failed to start'))
+	it('surface errors from devdoc.init', async () => {
+		devdocInit.mockRejectedValueOnce(new Error('Failed to start'))
 
 		await expect(Serve.run(['--port', '9999'])).rejects.toThrow(
 			'Failed to start',

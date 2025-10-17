@@ -7,7 +7,7 @@ interface Flags {
 
 const msg = (type: string, msg: string): void => {
 	console.log(
-		chalk.bgGreen.black('  Markserv  ') + chalk.white(` ${type}: `) + msg,
+		chalk.bgGreen.black('  Devdoc  ') + chalk.white(` ${type}: `) + msg,
 	)
 }
 
@@ -25,7 +25,7 @@ const splash = (flags?: Flags): void => {
   `),
 	)
 
-	msg('boot', 'starting Markserv...')
+	msg('boot', 'starting Devdoc...')
 }
 
 export default splash

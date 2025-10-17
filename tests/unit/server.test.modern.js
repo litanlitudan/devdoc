@@ -12,7 +12,7 @@ import fetch from 'node-fetch'
 // This would import the modernized server
 // import { init } from '../../lib/server.modern.js'
 
-describe('Markserv Server', () => {
+describe('Devdoc Server', () => {
 	let server
 	let port
 	let baseUrl

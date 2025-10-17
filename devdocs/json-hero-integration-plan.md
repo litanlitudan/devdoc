@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the plan to integrate JSON Hero UI into markserv, following the existing model-explorer integration pattern. When a JSON file is accessed via `/json/<path>`, markserv will render the JSON Hero interface to provide an enhanced viewing experience.
+This document outlines the plan to integrate JSON Hero UI into devdoc, following the existing model-explorer integration pattern. When a JSON file is accessed via `/json/<path>`, devdoc will render the JSON Hero interface to provide an enhanced viewing experience.
 
 ## Current State Analysis
 
@@ -64,14 +64,14 @@ remix build          # Build Remix app
 Similar to model-explorer, we'll use JSON Hero as an embedded static application:
 
 1. **Pre-build JSON Hero**: Build JSON Hero into static assets during setup
-2. **Embed in markserv**: Copy built assets to `lib/jsonhero/` directory
+2. **Embed in devdoc**: Copy built assets to `lib/jsonhero/` directory
 3. **Serve via Express**: Add route handler for `/json/<path>` URLs
 4. **Data Injection**: Pass JSON data via inline script tag or API endpoint
 
 ### Directory Structure
 
 ```
-markserv/
+devdoc/
 ├── lib/
 │   ├── jsonhero/              # JSON Hero static build output
 │   │   ├── index.html         # Modified entry point
@@ -363,7 +363,7 @@ If static embedding proves complex due to Remix's architecture, consider:
 - Easier to update JSON Hero version
 
 **Cons**:
-- Requires running JSON Hero dev server alongside markserv
+- Requires running JSON Hero dev server alongside devdoc
 - More complex navigation flow
 - Additional HTTP requests for data loading
 

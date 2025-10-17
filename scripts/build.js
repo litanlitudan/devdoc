@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Build script for markserv
+ * Build script for devdoc
  * Handles compilation, bundling, and optimization
  */
 
@@ -54,14 +54,14 @@ const buildSteps = {
 			'lib/templates/markdown.html',
 			'lib/templates/directory.html',
 			'lib/templates/error.html',
-			'lib/templates/markserv.css',
+			'lib/templates/devdoc.css',
 			'lib/templates/highlight-js-github-gist.css',
 			'lib/templates/github.less',
 
 			// Icon files
 			'lib/icons/material-icons.json',
 			'lib/icons/icons.css',
-			'lib/icons/markserv.svg',
+			'lib/icons/devdoc.svg',
 
 			// Root files
 			'package.json',
@@ -159,7 +159,7 @@ const buildSteps = {
 		// Add dist-specific fields
 		pkg.main = 'lib/server.js'
 		pkg.bin = {
-			markserv: 'lib/cli.js',
+			devdoc: 'lib/cli.js',
 			readme: 'lib/readme.js',
 		}
 
@@ -212,7 +212,7 @@ const buildSteps = {
  * Main build function
  */
 async function build() {
-	console.log(chalk.cyan.bold('\n🔨 Building markserv...\n'))
+	console.log(chalk.cyan.bold('\n🔨 Building devdoc...\n'))
 
 	const steps = [
 		{ name: 'Cleaning build directory', fn: buildSteps.clean },
@@ -249,8 +249,8 @@ async function build() {
 		console.log(chalk.cyan('Output directory: ') + chalk.white(join(rootDir, 'dist')))
 		console.log(chalk.cyan('\nNext steps:'))
 		console.log(chalk.white('  1. Install locally: ') + chalk.yellow.bold('npm link'))
-		console.log(chalk.gray('     This will install markserv globally for local development'))
-		console.log(chalk.white('  2. Test the build: ') + chalk.gray('markserv ./README.md'))
+		console.log(chalk.gray('     This will install devdoc globally for local development'))
+		console.log(chalk.white('  2. Test the build: ') + chalk.gray('devdoc ./README.md'))
 		console.log(chalk.white('  3. Publish to npm: ') + chalk.gray('cd dist && npm publish'))
 		console.log(chalk.white('  4. Create tarball: ') + chalk.gray('cd dist && npm pack'))
 	} else {

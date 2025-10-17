@@ -128,7 +128,7 @@ describe('Configuration Schemas', () => {
 })
 
 describe('Configuration Loading', () => {
-	const testConfigPath = join(process.cwd(), '.markservrc.test.json')
+	const testConfigPath = join(process.cwd(), '.devdocrc.test.json')
 
 	afterEach(() => {
 		if (existsSync(testConfigPath)) {

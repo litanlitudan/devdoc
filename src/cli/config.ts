@@ -1,5 +1,5 @@
 /**
- * Configuration schemas and loaders for markserv CLI
+ * Configuration schemas and loaders for devdoc CLI
  * Uses zod for validation and type inference
  */
 
@@ -48,12 +48,12 @@ export interface ConfigOverrides {
 }
 
 /**
- * Load configuration from .markservrc file (JSON or JS)
+ * Load configuration from .devdocrc file (JSON or JS)
  */
 export function loadConfigFile(cwd: string = process.cwd()): Partial<Config> {
 	const configPaths = [
-		join(cwd, '.markservrc.json'),
-		join(cwd, '.markservrc'),
+		join(cwd, '.devdocrc.json'),
+		join(cwd, '.devdocrc'),
 	]
 
 	for (const configPath of configPaths) {

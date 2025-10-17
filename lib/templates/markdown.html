@@ -6,8 +6,8 @@
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<title>{{title}}</title>
 	<meta charset="utf-8">
-	<link rel="stylesheet" href="{markserv}/templates/markserv.css">
-	<link rel="stylesheet" href="{markserv}/templates/highlight-js-github-gist.css">
+	<link rel="stylesheet" href="{devdoc}/templates/devdoc.css">
+	<link rel="stylesheet" href="{devdoc}/templates/highlight-js-github-gist.css">
 	<!-- Syntax highlighting with all common languages -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -1397,7 +1397,7 @@
 		const toggleText = document.getElementById('toggleText');
 
 		// Load saved preference
-		const savedExpanded = localStorage.getItem('markserv-file-expanded') === 'true';
+		const savedExpanded = localStorage.getItem('devdoc-file-expanded') === 'true';
 		if (savedExpanded) {
 			body.classList.add('expanded');
 			toggleText.textContent = 'Normal';
@@ -1415,7 +1415,7 @@
 			widthToggle.title = isExpanded ? 'Return to normal width' : 'Toggle expanded view';
 
 			// Save preference
-			localStorage.setItem('markserv-file-expanded', isExpanded);
+			localStorage.setItem('devdoc-file-expanded', isExpanded);
 		}
 
 		// Handle click

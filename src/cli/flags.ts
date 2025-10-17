@@ -1,7 +1,7 @@
 /**
  * Shared CLI Flag Definitions
  *
- * This module defines the canonical CLI flags for markserv.
+ * This module defines the canonical CLI flags for devdoc.
  * Both the legacy (yargs) and new (oclif) CLIs should implement these flags
  * to maintain backward compatibility.
  */

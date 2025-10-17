@@ -1,4 +1,4 @@
-# Makefile for markserv - Build automation and task orchestration
+# Makefile for devdoc - Build automation and task orchestration
 #
 # This Makefile provides a unified interface for all development tasks,
 # enabling consistent workflows across local development and CI/CD.
@@ -15,7 +15,7 @@
 
 help:
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "  markserv - Build Automation Targets"
+	@echo "  devdoc - Build Automation Targets"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@echo "  📦 Installation & Setup:"

@@ -1,39 +1,39 @@
-# Global Usage Instructions for Markserv
+# Global Usage Instructions for Devdoc
 
-After setting up markserv globally with `npm link`, you can use it from anywhere on your system.
+After setting up devdoc globally with `npm link`, you can use it from anywhere on your system.
 
 ## Installation for Global Use
 
-1. **From the markserv directory**, run:
+1. **From the devdoc directory**, run:
    ```bash
    npm link
    ```
 
 2. This creates global symlinks:
-   - `markserv` command → points to `lib/cli.js`
+   - `devdoc` command → points to `lib/cli.js`
    - `readme` command → points to `lib/readme.js`
 
 ## Global Commands
 
-### `markserv` Command
-Use markserv from any directory to serve markdown and static files:
+### `devdoc` Command
+Use devdoc from any directory to serve markdown and static files:
 
 ```bash
 # Serve current directory
-markserv
+devdoc
 
 # Serve specific directory
-markserv /path/to/directory
+devdoc /path/to/directory
 
 # Serve specific file
-markserv document.md
+devdoc document.md
 
 # With options
-markserv --port 3000 --silent
-markserv -p 3000 -s
+devdoc --port 3000 --silent
+devdoc -p 3000 -s
 
 # Serve on specific address
-markserv --address 0.0.0.0 --port 8080
+devdoc --address 0.0.0.0 --port 8080
 ```
 
 ### `readme` Command
@@ -64,17 +64,17 @@ readme --port 3000
 ### Serve a Project Documentation
 ```bash
 cd ~/my-project
-markserv docs/
+devdoc docs/
 ```
 
 ### Serve on All Network Interfaces
 ```bash
-markserv --address 0.0.0.0 --port 8080
+devdoc --address 0.0.0.0 --port 8080
 ```
 
 ### Silent Mode (No Console Output)
 ```bash
-markserv --silent
+devdoc --silent
 ```
 
 ### Quick README Preview
@@ -84,11 +84,11 @@ readme
 ```
 
 ## MLIR Support
-Markserv now supports `.mlir` files with syntax highlighting:
+Devdoc now supports `.mlir` files with syntax highlighting:
 
 ```bash
 # Serve directory with MLIR files
-markserv /path/to/mlir/files
+devdoc /path/to/mlir/files
 
 # MLIR files will be rendered with proper syntax highlighting
 ```
@@ -97,15 +97,15 @@ markserv /path/to/mlir/files
 
 To remove the global link:
 ```bash
-npm unlink -g markserv
+npm unlink -g devdoc
 ```
 
 ## Troubleshooting
 
-If `markserv` command is not found:
+If `devdoc` command is not found:
 1. Check npm global bin directory: `npm bin -g`
 2. Ensure it's in your PATH
-3. Re-run `npm link` from the markserv directory
+3. Re-run `npm link` from the devdoc directory
 
 ## Features
 - 🎨 GitHub-flavored markdown rendering

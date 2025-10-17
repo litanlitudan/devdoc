@@ -41,7 +41,7 @@ import multer from 'multer'
 
 import type {
 	Flags,
-	MarkservService,
+	DevdocService,
 	FileInfo,
 	DirectoryInfo,
 	Breadcrumb,
@@ -762,7 +762,7 @@ fileTypes.watch = fileTypes.watch
 // In compiled dist/server.js, __dirname is 'dist/', so we need to go up to find lib/
 const libPath = path.join(__dirname, '..', 'lib')
 
-const faviconPath = path.join(libPath, 'icons', 'markserv.svg')
+const faviconPath = path.join(libPath, 'icons', 'devdoc.svg')
 const faviconData = fs.readFileSync(faviconPath)
 
 const log = (str: string | null, flags: Flags, err?: Error): void => {
@@ -784,14 +784,14 @@ const msg = (type: string, msg: string, flags: Flags): void => {
 		return log(`${chalk.bgYellow.black('    GitHub  ')} ${msg}`, flags)
 	}
 
-	log(chalk.bgGreen.black('  Markserv  ') + chalk.white(` ${type}: `) + msg, flags)
+	log(chalk.bgGreen.black('  Devdoc  ') + chalk.white(` ${type}: `) + msg, flags)
 }
 
 const errormsg = (type: string, msg: string, flags: Flags, err?: Error): void =>
-	log(chalk.bgRed.white('  Markserv  ') + chalk.red(` ${type}: `) + msg, flags, err)
+	log(chalk.bgRed.white('  Devdoc  ') + chalk.red(` ${type}: `) + msg, flags, err)
 
 const warnmsg = (type: string, msg: string, flags: Flags): void =>
-	log(chalk.bgYellow.black('  Markserv  ') + chalk.yellow(` ${type}: `) + msg, flags)
+	log(chalk.bgYellow.black('  Devdoc  ') + chalk.yellow(` ${type}: `) + msg, flags)
 
 const isType = (exts: string[], filePath: string): boolean => {
 	const fileExt = path.parse(filePath).ext
@@ -961,8 +961,8 @@ const getPathFromUrl = (url: string): string => {
 	return url.split(/[?#]/)[0]
 }
 
-// Removed markservPageObject - no longer needed since we directly
-// return the relative path in the markserv handler
+// Removed devdocPageObject - no longer needed since we directly
+// return the relative path in the devdoc handler
 
 // Helper function to encode URL paths while preserving path structure
 // Encodes each path segment separately to handle Chinese/Unicode characters
@@ -1014,11 +1014,11 @@ const createBreadcrumbs = (path: string): Breadcrumb[] => {
 const logPageVisit = (req: Request, _filePath: string, fileType?: string): void => {
 	const visitPath = getPathFromUrl(req.originalUrl)
 
-	// Exclude only markserv internal library files from analytics
+	// Exclude only devdoc internal library files from analytics
 	// Track user content including Model Explorer visualizations and API downloads
 	if (
 		visitPath.startsWith('/lib/') ||           // Library files (CSS, icons, etc.)
-		visitPath.startsWith('/{markserv}') ||     // Markserv URL placeholders
+		visitPath.startsWith('/{devdoc}') ||     // Devdoc URL placeholders
 		visitPath === '/tracking'                   // Analytics page itself
 	) {
 		return
@@ -1132,7 +1132,7 @@ const createRequestHandler = (flags: Flags) => {
 		maxDepth: 10
 	}
 
-	const markservUrlLead = '%7Bmarkserv%7D'
+	const devdocUrlLead = '%7Bdevdoc%7D'
 
 	return (req: Request, res: Response): void => {
 		// Properly decode the URL - decodeURIComponent handles special characters better than unescape
@@ -1451,7 +1451,7 @@ const createRequestHandler = (flags: Flags) => {
 
 		// Handle dev3000 specific routes (Next.js paths)
 		// dev3000 tries to communicate using Next.js-specific paths like /_next/mcp
-		// Silently return 404 for these paths since markserv is not a Next.js app
+		// Silently return 404 for these paths since devdoc is not a Next.js app
 		if (decodedUrl.startsWith('/_next/')) {
 			res.status(404).end()
 			return
@@ -1477,7 +1477,7 @@ const createRequestHandler = (flags: Flags) => {
 
 		// Create request-specific handlers with the correct relative path
 		const implantHandlers: ImplantHandlers = {
-			markserv: (_prop: string): Promise<string | false> => new Promise(resolve => {
+			devdoc: (_prop: string): Promise<string | false> => new Promise(resolve => {
 				// Return the relative path from the current location to the lib directory
 				// This ensures CSS paths work correctly in nested directories
 				resolve(relativePath)
@@ -1572,16 +1572,16 @@ const createRequestHandler = (flags: Flags) => {
 			msg('request', filePath, flags)
 		}
 
-		const isMarkservUrl = req.url.includes(markservUrlLead)
-		if (isMarkservUrl) {
-			const markservFilePath = req.url.split(markservUrlLead)[1]
-			const markservRelFilePath = path.join(__dirname, markservFilePath)
+		const isDevdocUrl = req.url.includes(devdocUrlLead)
+		if (isDevdocUrl) {
+			const devdocFilePath = req.url.split(devdocUrlLead)[1]
+			const devdocRelFilePath = path.join(__dirname, devdocFilePath)
 			if (flags.verbose) {
-				msg('{markserv url}', style.link(markservRelFilePath), flags)
+				msg('{devdoc url}', style.link(devdocRelFilePath), flags)
 			}
 
 			// Send static file
-			const stream = fs.createReadStream(markservRelFilePath)
+			const stream = fs.createReadStream(devdocRelFilePath)
 			stream.on('error', () => {
 				res.status(404).end()
 			})
@@ -2146,7 +2146,7 @@ const createRequestHandler = (flags: Flags) => {
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>${fileName}</title>
-	<link rel="stylesheet" href="{markserv}/templates/markserv.css">
+	<link rel="stylesheet" href="{devdoc}/templates/devdoc.css">
 	<style>
 		.download-container {
 			max-width: 800px;
@@ -2382,7 +2382,7 @@ const startLiveReloadServer = async (liveReloadPort: number, flags: Flags): Prom
 const logActiveServerInfo = async (serveURL: string, _actualHttpPort: number, liveReloadPort: number, flags: Flags): Promise<void> => {
 	const dir = path.resolve(flags.dir)
 
-	const githubLink = 'github.com/litanlitudan/markserv'
+	const githubLink = 'github.com/litanlitudan/devdoc'
 
 	msg('address', style.address(serveURL), flags)
 	msg('path', chalk.grey(style.address(dir)), flags)
@@ -2415,12 +2415,12 @@ const optionalUpgrade = async (flags: Flags): Promise<void> => {
 			return
 		}
 
-		msg(chalk.bgRed('✨UPGRADE✨'), `Markserv version: ${version} is available!`, flags)
+		msg(chalk.bgRed('✨UPGRADE✨'), `Devdoc version: ${version} is available!`, flags)
 
 		const logInstallNotes = (): void => {
 			msg(chalk.bgRed('✨UPGRADE✨'), 'Upgrade cancelled. To upgrade manually:', flags)
-			msg(chalk.bgRed('✨UPGRADE✨'), chalk.bgYellow.black.bold(` npm i -g markserv@${version} `), flags)
-			msg(chalk.bgRed('✨UPGRADE✨'), chalk.bgYellow.black.bold(` yarn global add markserv@${version} `), flags)
+			msg(chalk.bgRed('✨UPGRADE✨'), chalk.bgYellow.black.bold(` npm i -g devdoc@${version} `), flags)
+			msg(chalk.bgRed('✨UPGRADE✨'), chalk.bgYellow.black.bold(` yarn global add devdoc@${version} `), flags)
 		}
 
 		// For now, just log the install notes since promptly is not available
@@ -2430,7 +2430,7 @@ const optionalUpgrade = async (flags: Flags): Promise<void> => {
 	})
 }
 
-const init = async (flags: Flags): Promise<MarkservService> => {
+const init = async (flags: Flags): Promise<DevdocService> => {
 	const liveReloadPort = flags.livereloadport
 	const httpPort = flags.port
 	const watchEnabled = flags.watch || false
@@ -2462,7 +2462,7 @@ const init = async (flags: Flags): Promise<MarkservService> => {
 	} else {
 		// Log without LiveReload info
 		const dir = path.resolve(flags.dir)
-		const githubLink = 'github.com/litanlitudan/markserv'
+		const githubLink = 'github.com/litanlitudan/devdoc'
 
 		msg('address', style.address(serveURL), flags)
 		msg('path', chalk.grey(style.address(dir)), flags)
@@ -2487,7 +2487,7 @@ const init = async (flags: Flags): Promise<MarkservService> => {
 		flags.livereloadport = actualLiveReloadPort
 	}
 
-	const service: MarkservService = {
+	const service: DevdocService = {
 		pid: process.pid,
 		httpServer,
 		liveReloadServer,
@@ -2516,7 +2516,7 @@ const init = async (flags: Flags): Promise<MarkservService> => {
 	return service
 }
 
-export const createMarkservApp = (flags: Flags): Application => {
+export const createDevdocApp = (flags: Flags): Application => {
 	const normalizedFlags: Flags = {
 		...flags,
 		port: typeof flags.port === 'undefined' ? 0 : flags.port,
@@ -2534,5 +2534,5 @@ export default {
 	getFile,
 	markdownToHTML,
 	init,
-	createMarkservApp
+	createDevdocApp
 }

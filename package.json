@@ -1,5 +1,5 @@
 {
-  "name": "markserv",
+  "name": "devdoc",
   "version": "2.0.0-beta.1",
   "description": "🏁  serve markdown as html (GitHub style), index directories, live-reload as you edit",
   "type": "module",
@@ -13,7 +13,7 @@
     "build:watch": "tsc --watch",
     "build:adapter": "bash scripts/build_adapter_from_source.sh",
     "setup:python": "bash scripts/setup-python-deps.sh",
-    "start": "echo \"🚀 Starting markserv on :8642\" && node dist/cli.js",
+    "start": "echo \"🚀 Starting devdoc on :8642\" && node dist/cli.js",
     "dev": "npm run port:kill && npm run build && node --watch dist/cli.js",
     "test": "npm run build && vitest run",
     "test:watch": "vitest watch",
@@ -55,15 +55,15 @@
     "templating"
   ],
   "bin": {
-    "markserv": "bin/markserv",
+    "devdoc": "bin/devdoc",
     "readme": "bin/readme"
   },
   "oclif": {
-    "bin": "markserv",
+    "bin": "devdoc",
     "commands": "./dist/src/cli/commands"
   },
   "files": [
-    "bin/markserv",
+    "bin/devdoc",
     "bin/readme",
     "dist/**/*.js",
     "dist/**/*.d.ts",
@@ -74,14 +74,14 @@
     "scripts/infer_onnx_shapes.py",
     "scripts/parse_mlir.py",
     "scripts/setup-python-deps.sh",
-    "media/markserv-favicon-96x96.png",
-    "media/markserv-logo-term.png"
+    "media/devdoc-favicon-96x96.png",
+    "media/devdoc-logo-term.png"
   ],
   "author": "Tan Li",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "http://github.com/litanlitudan/markserv.git"
+    "url": "http://github.com/litanlitudan/devdoc.git"
   },
   "dependencies": {
     "@oclif/core": "^4.0.0",

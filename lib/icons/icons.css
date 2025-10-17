@@ -1,5 +1,5 @@
 .icon.markdown:before {
-    background-image: url("markserv-color.svg");
+    background-image: url("devdoc-color.svg");
 }
 .icon.git:before {
     -webkit-mask-image: url("git.svg");

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * markserv CLI entry point (oclif)
+ * devdoc CLI entry point (oclif)
  *
  * This is the new CLI architecture using oclif.
  * Enable with: MARKSERV_USE_NEW_CLI=1

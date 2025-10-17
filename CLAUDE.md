@@ -24,7 +24,7 @@ npm run clean:artifacts    # Remove all build artifacts (dist/, coverage/, Bazel
 ./lib/cli.js [file-or-directory]
 
 # Or using the global command (if installed globally)
-markserv [file-or-directory]
+devdoc [file-or-directory]
 
 # Start with specific options
 ./lib/cli.js -p 3000 -a 0.0.0.0 ./README.md  # Custom port and address
@@ -210,7 +210,7 @@ When creating test examples or sample files for new features (like MLIR support)
 
 **Static Resources:**
 
-- CSS files use GitHub-like styling (`github.less`, `markserv.css`)
+- CSS files use GitHub-like styling (`github.less`, `devdoc.css`)
 - Icons stored in `lib/icons/` with mapping in `material-icons.json`
 
 **Test Structure:**
@@ -223,7 +223,7 @@ When creating test examples or sample files for new features (like MLIR support)
 
 **URL Handling:**
 
-- Special `{markserv}` URLs resolve to library resources
+- Special `{devdoc}` URLs resolve to library resources
 - Path normalization handles various input formats (relative, absolute)
 - URL parameters are stripped before file resolution
 
