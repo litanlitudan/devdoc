@@ -19,3 +19,4 @@ third_party/model-explorer/src/builtin-adapter/bazel-*
 **/.env
 devdocs/SIGNALS.md
 .beads/
+devdocs/logs

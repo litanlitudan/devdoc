@@ -12,7 +12,10 @@ import less from 'less'
 import { WebSocketServer } from 'ws'
 import chokidar, { FSWatcher } from 'chokidar'
 import handlebars from 'handlebars'
-import MarkdownIt, { Token, Options, Renderer } from 'markdown-it'
+import MarkdownIt from 'markdown-it'
+import type Token from 'markdown-it/lib/token.mjs'
+import type Renderer from 'markdown-it/lib/renderer.mjs'
+import type { Options, PluginSimple } from 'markdown-it'
 import mdItAnchor from 'markdown-it-anchor'
 // These are CommonJS modules that need special handling in ES modules
 import { createRequire } from 'module'
@@ -507,7 +510,7 @@ const md = new MarkdownIt({
 		})
 	})
 	.use(mdItTaskLists)
-	.use(mdItHLJS)
+	.use(mdItHLJS as unknown as PluginSimple)
 	.use(mdItEmoji)
 	.use(mdItMathJax)
 	.use(customFencePlugin)
@@ -2513,8 +2516,23 @@ const init = async (flags: Flags): Promise<MarkservService> => {
 	return service
 }
 
+export const createMarkservApp = (flags: Flags): Application => {
+	const normalizedFlags: Flags = {
+		...flags,
+		port: typeof flags.port === 'undefined' ? 0 : flags.port,
+		watch: false,
+		livereloadport: 'false',
+		verbose: flags.verbose ?? false,
+		silent: flags.silent ?? true,
+	}
+
+	const httpRequestHandler = createRequestHandler(normalizedFlags)
+	return startExpressApp(0, httpRequestHandler, false)
+}
+
 export default {
 	getFile,
 	markdownToHTML,
-	init
+	init,
+	createMarkservApp
 }

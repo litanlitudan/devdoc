@@ -1,9 +1,9 @@
 {
 	"compilerOptions": {
 		"target": "ES2022",
-		"module": "ES2022",
+		"module": "node16",
 		"lib": ["ES2022"],
-		"moduleResolution": "node10",
+		"moduleResolution": "node16",
 		"resolveJsonModule": true,
 		"allowJs": false,
 		"checkJs": false,
@@ -22,7 +22,8 @@
 		"noFallthroughCasesInSwitch": true
 	},
 	"include": [
-		"lib/**/*.ts"
+		"lib/**/*.ts",
+		"src/**/*.ts"
 	],
 	"exclude": [
 		"node_modules",

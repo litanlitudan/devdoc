@@ -449,22 +449,12 @@
 			background: rgba(0, 0, 0, 0.9);
 			z-index: 100000;
 			backdrop-filter: blur(4px);
-			animation: fadeIn 0.2s ease;
 		}
 
 		.mermaid-modal.active {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-		}
-
-		@keyframes fadeIn {
-			from {
-				opacity: 0;
-			}
-			to {
-				opacity: 1;
-			}
 		}
 
 		.mermaid-modal-content {
@@ -609,7 +599,6 @@
 
 		.mermaid-modal-diagram {
 			transform-origin: top center;
-			transition: transform 0.2s ease;
 			display: inline-block;
 		}
 
@@ -632,44 +621,49 @@
 			display: none;
 		}
 
-		/* Make mermaid diagrams clickable */
-		.markdown-body .mermaid {
-			cursor: pointer;
-			transition: all 0.2s ease;
-			border: 2px solid transparent;
-			border-radius: 6px;
-			padding: 8px;
+		/* Mermaid diagram wrapper */
+		.mermaid-diagram-wrapper {
+			position: relative;
 			margin: 16px 0;
 		}
 
-		.markdown-body .mermaid:hover {
-			border-color: #0969da;
-			background: #f6f8fa;
-			box-shadow: 0 4px 12px rgba(9, 105, 218, 0.15);
-			transform: translateY(-2px);
+		.markdown-body .mermaid {
+			border: 2px solid transparent;
+			border-radius: 6px;
+			padding: 8px;
+			margin: 0;
 		}
 
-		/* Add zoom icon hint on hover */
-		.markdown-body .mermaid::after {
-			content: '🔍';
+		/* Zoom button for mermaid diagrams */
+		.zoom-mermaid-button {
 			position: absolute;
 			top: 8px;
 			right: 8px;
+			padding: 6px 12px;
+			font-size: 12px;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+			line-height: 1.5;
+			color: #24292f;
+			background-color: #f6f8fa;
+			border: 1px solid rgba(27, 31, 36, 0.15);
+			border-radius: 6px;
+			cursor: pointer;
 			opacity: 0;
-			transition: opacity 0.2s ease;
-			font-size: 18px;
-			background: white;
-			border-radius: 4px;
-			padding: 4px 8px;
-			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+			transition: opacity 0.2s, background-color 0.2s;
+			z-index: 10;
 		}
 
-		.markdown-body .mermaid {
-			position: relative;
-		}
-
-		.markdown-body .mermaid:hover::after {
+		.mermaid-diagram-wrapper:hover .zoom-mermaid-button {
 			opacity: 1;
+		}
+
+		.zoom-mermaid-button:hover {
+			background-color: #f3f4f6;
+			border-color: rgba(27, 31, 36, 0.25);
+		}
+
+		.zoom-mermaid-button:active {
+			background-color: #e1e4e8;
 		}
 
 		/* Set explicit base size for header to prevent inheritance */
@@ -863,23 +857,33 @@
 		let scrollLeft = 0;
 		let scrollTop = 0;
 
-		// Make all mermaid diagrams clickable
+		// Wrap mermaid diagrams and add zoom buttons
 		document.querySelectorAll('.markdown-body .mermaid').forEach(diagram => {
-			diagram.addEventListener('click', function() {
-				openMermaidModal(this);
+			// Skip if already wrapped
+			if (diagram.parentElement.classList.contains('mermaid-diagram-wrapper')) {
+				return;
+			}
+
+			// Create wrapper
+			const wrapper = document.createElement('div');
+			wrapper.className = 'mermaid-diagram-wrapper';
+
+			// Create zoom button
+			const zoomButton = document.createElement('button');
+			zoomButton.className = 'zoom-mermaid-button';
+			zoomButton.textContent = '🔍 Zoom';
+			zoomButton.setAttribute('aria-label', 'Open diagram in zoom viewer');
+
+			// Add click handler to button
+			zoomButton.addEventListener('click', function(e) {
+				e.stopPropagation();
+				openMermaidModal(diagram);
 			});
 
-			// Keyboard support
-			diagram.setAttribute('tabindex', '0');
-			diagram.setAttribute('role', 'button');
-			diagram.setAttribute('aria-label', 'Click to zoom diagram');
-
-			diagram.addEventListener('keydown', function(e) {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					openMermaidModal(this);
-				}
-			});
+			// Wrap the diagram
+			diagram.parentNode.insertBefore(wrapper, diagram);
+			wrapper.appendChild(diagram);
+			wrapper.appendChild(zoomButton);
 		});
 
 		function openMermaidModal(diagramElement) {

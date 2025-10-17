@@ -6,12 +6,45 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { spawn } from 'child_process';
+import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Get the actual CLI script path (compiled from TypeScript)
-const cliPath = join(__dirname, '..', 'dist', 'cli.js');
+const toBoolean = (value) => {
+  if (!value) return false;
+  const normalized = value.toString().toLowerCase();
+  return normalized === '1' || normalized === 'true' || normalized === 'yes';
+};
+
+const legacyCandidates = [
+  join(__dirname, '..', 'dist', 'cli.js'),
+  join(__dirname, '..', 'dist', 'lib', 'cli.js')
+];
+
+const newCliPath = join(__dirname, '..', 'dist', 'src', 'cli', 'index.js');
+
+const resolveLegacyCli = () => legacyCandidates.find((candidate) => existsSync(candidate));
+
+const resolveCliPath = () => {
+  const wantsNewCli = toBoolean(process.env.MARKSERV_USE_NEW_CLI);
+  if (wantsNewCli && existsSync(newCliPath)) {
+    return newCliPath;
+  }
+
+  const legacyCli = resolveLegacyCli();
+  if (legacyCli) {
+    return legacyCli;
+  }
+
+  if (wantsNewCli) {
+    console.warn('Warning: MARKSERV_USE_NEW_CLI is set but the compiled oclif entrypoint was not found. Falling back to legacy CLI.');
+  }
+
+  throw new Error('Unable to locate markserv CLI entrypoint. Run `npm run build` before invoking the CLI.');
+};
+
+const cliPath = resolveCliPath();
 
 // Pass through all arguments to the actual CLI
 const args = process.argv.slice(2);

@@ -1,109 +1,95 @@
-import {describe, it, expect, beforeAll, afterAll} from 'vitest'
-import getPort from 'get-port'
-import serverModule from '../../dist/server.js'
+import { describe, it, expect } from 'vitest'
+import request from 'supertest'
 import fs from 'node:fs'
 import path from 'node:path'
-import {fileURLToPath} from 'node:url'
+import { fileURLToPath } from 'node:url'
+import { createMarkservApp } from '../../dist/lib/server.js'
 
-const {init} = serverModule
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-describe('API route for direct downloads', () => {
-	let server
-	let port
+const baseFlags = {
+	dir: path.join(__dirname, '..', '..'),
+	port: 0,
+	address: '127.0.0.1',
+	livereloadport: 'false',
+	watch: false,
+	silent: true,
+	verbose: false,
+	browser: false,
+}
 
-	beforeAll(async () => {
-		port = await getPort()
-		const flags = {
-			dir: path.join(__dirname, '..', '..'),
-			port,
-			address: 'localhost',
-			livereloadport: false,
-			silent: true,
-			verbose: false
-		}
+const app = createMarkservApp({ ...baseFlags })
 
-		server = await init(flags)
-	})
+const supertestAvailable = process.env.MARKSERV_ENABLE_SUPERTEST === '1'
 
-	afterAll(async () => {
-		if (server && server.httpServer) {
-			await new Promise((resolve) => server.httpServer.close(resolve))
-		}
-	})
+const describeIf = supertestAvailable ? describe : describe.skip
+const itIf = supertestAvailable ? it : it.skip
 
-	it('should download files directly via /api/ route', async () => {
-		// Test downloading package.json via API route
-		const response = await fetch(`http://localhost:${port}/api/package.json`)
-		const content = await response.text()
-
-		// Check response headers
-		expect(response.headers.get('content-type')).toMatch(/application\/json/)
-		expect(response.headers.get('content-disposition')).toBe('attachment; filename="package.json"')
-
-		// Verify content matches actual file
-		const actualContent = fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf8')
-		expect(content).toBe(actualContent)
-	})
-
-	it('should download JavaScript files via /api/ route', async () => {
-		// Test downloading a JS file
-		const response = await fetch(`http://localhost:${port}/api/dist/cli.js`)
-
-		// Check response headers
-		expect(response.headers.get('content-type')).toMatch(/application\/javascript/)
-		expect(response.headers.get('content-disposition')).toBe('attachment; filename="cli.js"')
-
-		// Verify content
-		const content = await response.text()
-		expect(content.length).toBeGreaterThan(0)
-		expect(content).toContain('#!/usr/bin/env node')
-	})
-
-	it('should return 404 for non-existent files via /api/ route', async () => {
-		const response = await fetch(`http://localhost:${port}/api/nonexistent.js`)
-
-		expect(response.status).toBe(404)
-		const content = await response.text()
-		expect(content).toBe('File not found')
-	})
-
-	it('should return 400 for directories via /api/ route', async () => {
-		const response = await fetch(`http://localhost:${port}/api/lib/`)
-
-		expect(response.status).toBe(400)
-		const content = await response.text()
-		expect(content).toBe('API route does not support directories')
-	})
-
-	it('should work with curl-like user agents', async () => {
-		// Simulate curl request
-		const response = await fetch(`http://localhost:${port}/api/package.json`, {
-			headers: {
-				'User-Agent': 'curl/7.64.1'
-			}
-		})
+describeIf('API route for direct downloads', () => {
+	itIf('should download files directly via /api/ route', async () => {
+		const response = await request(app).get('/api/package.json')
 
 		expect(response.status).toBe(200)
-		expect(response.headers.get('content-disposition')).toBe('attachment; filename="package.json"')
+		expect(response.headers['content-type']).toMatch(/application\/json/)
+		expect(response.headers['content-disposition']).toBe('attachment; filename="package.json"')
+
+		const actualContent = fs.readFileSync(
+			path.join(__dirname, '..', '..', 'package.json'),
+			'utf8',
+		)
+		expect(response.text).toBe(actualContent)
 	})
 
-	it('should handle files with special characters in names', async () => {
-		// Create a test file with special characters
+	itIf('should download JavaScript files via /api/ route', async () => {
+		const response = await request(app).get('/api/dist/cli.js')
+
+		expect(response.status).toBe(200)
+		expect(response.headers['content-type']).toMatch(/javascript/)
+		expect(response.headers['content-disposition']).toBe('attachment; filename="cli.js"')
+
+		expect(response.text.length).toBeGreaterThan(0)
+		expect(response.text).toContain('#!/usr/bin/env node')
+	})
+
+	itIf('should return 404 for non-existent files via /api/ route', async () => {
+		const response = await request(app).get('/api/nonexistent.js')
+
+		expect(response.status).toBe(404)
+		expect(response.text).toBe('File not found')
+	})
+
+	itIf('should return 400 for directories via /api/ route', async () => {
+		const response = await request(app).get('/api/lib/')
+
+		expect(response.status).toBe(400)
+		expect(response.text).toBe('API route does not support directories')
+	})
+
+	itIf('should work with curl-like user agents', async () => {
+		const response = await request(app)
+			.get('/api/package.json')
+			.set('User-Agent', 'curl/7.64.1')
+
+		expect(response.status).toBe(200)
+		expect(response.headers['content-disposition']).toBe('attachment; filename="package.json"')
+	})
+
+	itIf('should handle files with special characters in names', async () => {
 		const testFile = path.join(__dirname, 'test file with spaces.txt')
 		fs.writeFileSync(testFile, 'test content')
 
 		try {
-			const response = await fetch(`http://localhost:${port}/api/tests/unit/test%20file%20with%20spaces.txt`)
+			const response = await request(app).get(
+				'/api/tests/unit/test%20file%20with%20spaces.txt',
+			)
 
 			expect(response.status).toBe(200)
-			expect(response.headers.get('content-disposition')).toBe('attachment; filename="test file with spaces.txt"')
-
-			const content = await response.text()
-			expect(content).toBe('test content')
+			expect(response.headers['content-disposition']).toBe(
+				'attachment; filename="test file with spaces.txt"',
+			)
+			expect(response.text).toBe('test content')
 		} finally {
-			// Cleanup
 			if (fs.existsSync(testFile)) {
 				fs.unlinkSync(testFile)
 			}

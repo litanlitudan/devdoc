@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeAll} from 'vitest';
-import {convertMLIRToGraph} from '../../dist/mlir-to-graph.js';
+import {convertMLIRToGraph} from '../../dist/lib/mlir-to-graph.js';
 import {execSync} from 'child_process';
 
 // Check if Model Explorer adapter is available

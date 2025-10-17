@@ -58,6 +58,10 @@
     "markserv": "bin/markserv",
     "readme": "bin/readme"
   },
+  "oclif": {
+    "bin": "markserv",
+    "commands": "./dist/src/cli/commands"
+  },
   "files": [
     "bin/markserv",
     "bin/readme",
@@ -80,14 +84,18 @@
     "url": "http://github.com/litanlitudan/markserv.git"
   },
   "dependencies": {
+    "@oclif/core": "^4.0.0",
     "ai-edge-model-explorer-visualizer": "^0.1.2",
     "chalk": "^5.3.0",
     "chokidar": "^3.6.0",
     "compression": "^1.7.4",
+    "execa": "^9.0.0",
     "express": "^4.21.1",
     "handlebars": "^4.7.8",
     "highlight.js": "^11.10.0",
     "highlightjs-mlir": "^0.0.1",
+    "http-errors": "^2.0.0",
+    "inquirer": "^12.0.0",
     "is-online": "^10.0.0",
     "less": "^4.2.0",
     "markdown-it": "^14.1.0",
@@ -103,33 +111,44 @@
     "onnx-proto": "^8.0.1",
     "open": "^10.1.0",
     "ora": "^8.1.0",
+    "p-queue": "^8.0.0",
+    "pino": "^9.0.0",
+    "pino-pretty": "^11.0.0",
     "serve-static": "^1.16.2",
     "vanilla-jsoneditor": "^3.10.0",
     "ws": "^8.18.0",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@oclif/test": "^4.0.0",
     "@types/compression": "^1.8.1",
     "@types/express": "^5.0.3",
     "@types/handlebars": "^4.0.40",
+    "@types/http-errors": "^2.0.0",
+    "@types/inquirer": "^9.0.0",
     "@types/less": "^3.0.8",
     "@types/markdown-it": "^14.1.2",
     "@types/mime-types": "^3.0.1",
     "@types/multer": "^2.0.0",
     "@types/node": "^20.16.11",
+    "@types/supertest": "^6.0.0",
     "@types/ws": "^8.18.1",
     "@types/yargs": "^17.0.33",
     "@vitest/ui": "^2.1.3",
     "eslint": "^9.13.0",
     "eslint-config-prettier": "^9.1.0",
+    "node-mocks-http": "^1.14.0",
     "form-data": "^4.0.4",
     "get-port": "^7.1.0",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "node-fetch": "^3.3.2",
     "prettier": "^3.3.3",
+    "supertest": "^7.0.0",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.3"
+    "vitest": "^2.1.3",
+    "zod-openapi": "^2.19.0"
   },
   "prettier": {
     "semi": false,
