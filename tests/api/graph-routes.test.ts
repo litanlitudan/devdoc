@@ -8,7 +8,7 @@ vi.mock('../../lib/api/services/mlir.js', () => ({
   validateMlirSyntax: vi.fn(),
 }))
 
-const supertestAvailable = process.env.MARKSERV_ENABLE_SUPERTEST === '1'
+const supertestAvailable = process.env.DEVDOC_ENABLE_SUPERTEST === '1'
 const describeIf = supertestAvailable ? describe : describe.skip
 const itIf = supertestAvailable ? it : it.skip
 

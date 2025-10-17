@@ -21,7 +21,7 @@ const baseFlags = {
 
 const app = createDevdocApp({ ...baseFlags })
 
-const supertestAvailable = process.env.MARKSERV_ENABLE_SUPERTEST === '1'
+const supertestAvailable = process.env.DEVDOC_ENABLE_SUPERTEST === '1'
 
 const describeIf = supertestAvailable ? describe : describe.skip
 const itIf = supertestAvailable ? it : it.skip
