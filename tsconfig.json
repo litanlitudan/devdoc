@@ -30,6 +30,7 @@
 		"dist",
 		"coverage",
 		"tests",
-		"bin"
+		"bin",
+		"lib/legacy"
 	]
 }

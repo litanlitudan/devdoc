@@ -8,6 +8,7 @@
 import { Command, Flags, Args } from '@oclif/core'
 import path from 'node:path'
 import markserv from '../../../lib/server.js'
+import splash from '../../../lib/splash.js'
 import type { Flags as ServerFlags } from '../../../lib/types.js'
 import { logger, setLogLevel } from '../services/logger.js'
 import { loadConfig } from '../config.js'
@@ -65,6 +66,9 @@ export default class Serve extends Command {
 
 	public async run(): Promise<void> {
 		const { args, flags } = await this.parse(Serve)
+
+		// Display splash screen (unless silent)
+		splash({ silent: flags.silent })
 
 		// Configure logger based on verbosity
 		if (flags.verbose) {

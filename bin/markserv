@@ -27,18 +27,27 @@ const newCliPath = join(__dirname, '..', 'dist', 'src', 'cli', 'index.js');
 const resolveLegacyCli = () => legacyCandidates.find((candidate) => existsSync(candidate));
 
 const resolveCliPath = () => {
-  const wantsNewCli = toBoolean(process.env.MARKSERV_USE_NEW_CLI);
-  if (wantsNewCli && existsSync(newCliPath)) {
+  // Default to new oclif CLI unless explicitly disabled
+  const wantsLegacyCli = toBoolean(process.env.MARKSERV_USE_LEGACY_CLI);
+
+  if (wantsLegacyCli) {
+    const legacyCli = resolveLegacyCli();
+    if (legacyCli) {
+      return legacyCli;
+    }
+    console.warn('Warning: MARKSERV_USE_LEGACY_CLI is set but the legacy CLI was not found. Falling back to new CLI.');
+  }
+
+  // Try new CLI first (default behavior)
+  if (existsSync(newCliPath)) {
     return newCliPath;
   }
 
+  // Fallback to legacy CLI if new CLI not found
   const legacyCli = resolveLegacyCli();
   if (legacyCli) {
+    console.warn('Warning: Using legacy CLI. Run `npm run build` to use the new oclif CLI.');
     return legacyCli;
-  }
-
-  if (wantsNewCli) {
-    console.warn('Warning: MARKSERV_USE_NEW_CLI is set but the compiled oclif entrypoint was not found. Falling back to legacy CLI.');
   }
 
   throw new Error('Unable to locate markserv CLI entrypoint. Run `npm run build` before invoking the CLI.');

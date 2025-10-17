@@ -59,11 +59,37 @@ $ markserv path/to/docs -p 8642 -a 0.0.0.0
 ```
 
 ### Command Options
-- `-p 8642` - Sets the server port to 8642 (default: 8008)
+- `-p 8642` - Sets the server port to 8642 (default: 8642)
 - `-a 0.0.0.0` - Makes the server accessible from external networks (default: localhost)
 - `-s` - Silent mode (minimal output)
 - `-v` - Verbose mode (detailed output)
 - `-w` - Enable file watching for live reload
+
+### Development Commands
+
+```shell
+# Build the project
+$ markserv dev:build
+
+# Run tests
+$ markserv dev:test
+
+# Lint code
+$ markserv dev:lint
+
+# Clean build artifacts
+$ markserv dev:clean
+```
+
+### AI Model Processing Commands
+
+```shell
+# Parse MLIR file to graph format
+$ markserv graph:mlir model.mlir --output graph.json
+
+# Infer shapes for ONNX model
+$ markserv graph:onnx model.onnx --output model_with_shapes.onnx
+```
 
 ## Features
 
