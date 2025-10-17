@@ -108,6 +108,7 @@ export default class Serve extends Command {
 			dir: validatedServerPath,
 			$pathProvided: true,
 			$openLocation: true,
+			browser: process.env.NODE_ENV === 'test' ? false : undefined,
 		}
 
 		try {
