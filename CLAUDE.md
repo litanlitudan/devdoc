@@ -288,3 +288,52 @@ npm run setup:python
 This script will automatically check and install ONNX if needed. MLIR parsing requires no external dependencies.
 
 **Note:** The previous `ai-edge-model-explorer-adapter` dependency is no longer required for MLIR parsing.
+
+### MCP Server Integration & Browser Coordination
+
+**IMPORTANT:** When using dev3000 MCP server for browser automation and debugging, ensure chrome-devtools MCP connects to the same Chrome instance.
+
+**dev3000 Browser Management:**
+
+```bash
+# Start dev3000 (provides browser automation and monitoring)
+npx dev3000 --port 8642
+
+# This will display:
+# - App: http://localhost:8642
+# - MCP: http://localhost:3684
+# - Logs: http://localhost:3684/logs?project=devdoc
+```
+
+**Chrome DevTools Protocol (CDP) Coordination:**
+
+When both dev3000 and chrome-devtools MCP servers are available:
+- **dev3000** manages the Chrome instance via CDP
+- **chrome-devtools MCP** should connect to the same browser instance
+- Coordination happens automatically through CDP URL sharing
+- This prevents browser conflicts and ensures consistent state
+
+**Browser Action Routing:**
+
+The system automatically routes browser actions to the optimal MCP server:
+- **Screenshots** → chrome-devtools MCP (better quality)
+- **Navigation** → chrome-devtools MCP (more reliable)
+- **Clicks** → chrome-devtools MCP (precise coordinates)
+- **JavaScript evaluation** → chrome-devtools MCP (enhanced debugging)
+- **Scrolling & typing** → dev3000 fallback (specialized actions)
+
+**Debugging and Error Detection:**
+
+Use dev3000's capabilities for:
+- Real-time error monitoring and detection
+- Performance metrics and CLS (Cumulative Layout Shift) tracking
+- Browser console log capture
+- Visual diff analysis for layout debugging
+
+**Configuration Verification:**
+
+To verify proper MCP coordination:
+1. Check that dev3000 is running and showing MCP endpoint
+2. Confirm chrome-devtools MCP is configured in Claude Code settings
+3. Browser actions should automatically use the appropriate server
+4. Both servers share the same Chrome instance (no duplicate browsers)
