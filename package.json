@@ -1,180 +1,180 @@
 {
-  "name": "devdoc",
-  "version": "2.0.0-beta.1",
-  "description": "🏁  serve markdown as html (GitHub style), index directories, live-reload as you edit",
-  "type": "module",
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "scripts": {
-    "port:who": "bash -c 'echo \"🔍 Checking port 8642...\"; (lsof -iTCP:8642 -sTCP:LISTEN -n -P 2>/dev/null || true); (fuser 8642/tcp 2>/dev/null || true)'",
-    "port:kill": "bash -c 'echo \"🔧 Freeing port 8642...\"; PIDS=$(lsof -ti:8642 2>/dev/null || fuser 8642/tcp 2>/dev/null); if [ -n \"$PIDS\" ]; then echo \"⚠️  Killing $PIDS\"; kill -9 $PIDS 2>/dev/null || true; else echo \"✅ No process bound to 8642\"; fi; pkill -f \"dev3000.*8642\" 2>/dev/null && echo \"⚙️  Killed existing dev3000 (if any)\" || true; sleep 1'",
-    "build": "echo \"🏗️  Building project...\" && tsc && node scripts/post-build.js",
-    "build:watch": "tsc --watch",
-    "build:adapter": "bash scripts/build_adapter_from_source.sh",
-    "setup:python": "bash scripts/setup-python-deps.sh",
-    "start": "echo \"🚀 Starting devdoc on :8642\" && node dist/src/cli/index.js serve",
-    "dev": "npm run port:kill && npm run build && node --watch dist/src/cli/index.js serve",
-    "test": "npm run build && vitest run",
-    "test:watch": "vitest watch",
-    "test:ui": "vitest --ui",
-    "cover": "npm run build && vitest run --coverage",
-    "lint": "eslint . --fix",
-    "format": "prettier --write .",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist",
-    "clean:artifacts": "bash -c 'echo \"🧹 Cleaning build artifacts...\"; rm -rf dist/ coverage/ .nyc_output/; cd third_party/model-explorer/src/builtin-adapter 2>/dev/null && (rm -rf bazel-* gen/ 2>/dev/null || true); echo \"✅ Build artifacts cleaned\"'",
-    "prepare": "npm run build && node -e \"try { require('husky') } catch (e) { process.exit(0) }\" && npx husky || exit 0",
-    "prepublishOnly": "npm run clean && npm run build && npm test"
-  },
-  "keywords": [
-    "code",
-    "directory",
-    "gfm",
-    "github",
-    "github flavored markdown",
-    "highlighting",
-    "html",
-    "include",
-    "index",
-    "indexes",
-    "links",
-    "live",
-    "live-reload",
-    "livereload",
-    "markdown",
-    "markdown-it",
-    "marked",
-    "markitdown",
-    "md",
-    "realtime",
-    "reload",
-    "server",
-    "syntax highlighting",
-    "template",
-    "templating"
-  ],
-  "bin": {
-    "devdoc": "bin/devdoc",
-    "readme": "bin/readme"
-  },
-  "oclif": {
-    "bin": "devdoc",
-    "commands": "./dist/src/cli/commands"
-  },
-  "files": [
-    "bin/devdoc",
-    "bin/readme",
-    "dist/**/*.js",
-    "dist/**/*.d.ts",
-    "dist/**/*.js.map",
-    "lib/cli-help.txt",
-    "lib/icons",
-    "lib/templates",
-    "scripts/infer_onnx_shapes.py",
-    "scripts/parse_mlir.py",
-    "scripts/setup-python-deps.sh",
-    "media/devdoc-favicon-96x96.png",
-    "media/devdoc-logo-term.png"
-  ],
-  "author": "Tan Li",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/litanlitudan/devdoc.git"
-  },
-  "dependencies": {
-    "@oclif/core": "^4.0.0",
-    "ai-edge-model-explorer-visualizer": "^0.1.2",
-    "chalk": "^5.3.0",
-    "chokidar": "^3.6.0",
-    "compression": "^1.7.4",
-    "execa": "^9.0.0",
-    "express": "^4.21.1",
-    "handlebars": "^4.7.8",
-    "highlight.js": "^11.10.0",
-    "highlightjs-mlir": "^0.0.1",
-    "http-errors": "^2.0.0",
-    "inquirer": "^12.0.0",
-    "is-online": "^10.0.0",
-    "less": "^4.2.0",
-    "markdown-it": "^14.1.0",
-    "markdown-it-anchor": "^9.2.0",
-    "markdown-it-emoji": "^3.0.0",
-    "markdown-it-highlightjs": "^4.2.0",
-    "markdown-it-include": "^2.0.0",
-    "markdown-it-mathjax3": "^4.3.2",
-    "markdown-it-table-of-contents": "^0.8.0",
-    "markdown-it-task-lists": "^2.1.1",
-    "mime-types": "^2.1.35",
-    "multer": "^2.0.2",
-    "onnx-proto": "^8.0.1",
-    "open": "^10.1.0",
-    "ora": "^8.1.0",
-    "p-queue": "^8.0.0",
-    "pino": "^9.0.0",
-    "pino-pretty": "^11.0.0",
-    "serve-static": "^1.16.2",
-    "vanilla-jsoneditor": "^3.10.0",
-    "ws": "^8.18.0",
-    "zod": "^3.23.0"
-  },
-  "devDependencies": {
-    "@oclif/test": "^4.0.0",
-    "@types/compression": "^1.8.1",
-    "@types/express": "^5.0.3",
-    "@types/handlebars": "^4.0.40",
-    "@types/http-errors": "^2.0.0",
-    "@types/inquirer": "^9.0.0",
-    "@types/less": "^3.0.8",
-    "@types/markdown-it": "^14.1.2",
-    "@types/mime-types": "^3.0.1",
-    "@types/multer": "^2.0.0",
-    "@types/node": "^20.16.11",
-    "@types/supertest": "^6.0.0",
-    "@types/ws": "^8.18.1",
-    "@vitest/ui": "^2.1.3",
-    "eslint": "^9.13.0",
-    "eslint-config-prettier": "^9.1.0",
-    "form-data": "^4.0.4",
-    "get-port": "^7.1.0",
-    "husky": "^9.1.6",
-    "lint-staged": "^15.2.10",
-    "node-fetch": "^3.3.2",
-    "node-mocks-http": "^1.14.0",
-    "prettier": "^3.3.3",
-    "supertest": "^7.0.0",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.3",
-    "zod-openapi": "^2.19.0"
-  },
-  "prettier": {
-    "semi": false,
-    "singleQuote": true,
-    "tabWidth": 2,
-    "useTabs": true
-  },
-  "eslintConfig": {
-    "env": {
-      "node": true,
-      "es2024": true
-    },
-    "extends": [
-      "eslint:recommended",
-      "prettier"
-    ],
-    "parserOptions": {
-      "ecmaVersion": 2024,
-      "sourceType": "module"
-    }
-  },
-  "lint-staged": {
-    "*.{js,ts}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml}": [
-      "prettier --write"
-    ]
-  }
+	"name": "devdoc",
+	"version": "2.0.0-beta.1",
+	"description": "🏁  serve markdown as html (GitHub style), index directories, live-reload as you edit",
+	"type": "module",
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"scripts": {
+		"port:who": "bash -c 'echo \"🔍 Checking port 8642...\"; (lsof -iTCP:8642 -sTCP:LISTEN -n -P 2>/dev/null || true); (fuser 8642/tcp 2>/dev/null || true)'",
+		"port:kill": "bash -c 'echo \"🔧 Freeing port 8642...\"; PIDS=$(lsof -ti:8642 2>/dev/null || fuser 8642/tcp 2>/dev/null); if [ -n \"$PIDS\" ]; then echo \"⚠️  Killing $PIDS\"; kill -9 $PIDS 2>/dev/null || true; else echo \"✅ No process bound to 8642\"; fi; pkill -f \"dev3000.*8642\" 2>/dev/null && echo \"⚙️  Killed existing dev3000 (if any)\" || true; sleep 1'",
+		"build": "echo \"🏗️  Building project...\" && tsc && node scripts/post-build.js",
+		"build:watch": "tsc --watch",
+		"build:adapter": "bash scripts/build_adapter_from_source.sh",
+		"setup:python": "bash scripts/setup-python-deps.sh",
+		"start": "echo \"🚀 Starting devdoc on :8642\" && node dist/src/cli/index.js serve",
+		"dev": "npm run port:kill && npm run build && node --watch dist/src/cli/index.js serve",
+		"test": "npm run build && NODE_ENV=test vitest run",
+		"test:watch": "NODE_ENV=test vitest watch",
+		"test:ui": "NODE_ENV=test vitest --ui",
+		"cover": "npm run build && NODE_ENV=test vitest run --coverage",
+		"lint": "eslint . --fix",
+		"format": "prettier --write .",
+		"typecheck": "tsc --noEmit",
+		"clean": "rm -rf dist",
+		"clean:artifacts": "bash -c 'echo \"🧹 Cleaning build artifacts...\"; rm -rf dist/ coverage/ .nyc_output/; cd third_party/model-explorer/src/builtin-adapter 2>/dev/null && (rm -rf bazel-* gen/ 2>/dev/null || true); echo \"✅ Build artifacts cleaned\"'",
+		"prepare": "npm run build && node -e \"try { require('husky') } catch (e) { process.exit(0) }\" && npx husky || exit 0",
+		"prepublishOnly": "npm run clean && npm run build && npm test"
+	},
+	"keywords": [
+		"code",
+		"directory",
+		"gfm",
+		"github",
+		"github flavored markdown",
+		"highlighting",
+		"html",
+		"include",
+		"index",
+		"indexes",
+		"links",
+		"live",
+		"live-reload",
+		"livereload",
+		"markdown",
+		"markdown-it",
+		"marked",
+		"markitdown",
+		"md",
+		"realtime",
+		"reload",
+		"server",
+		"syntax highlighting",
+		"template",
+		"templating"
+	],
+	"bin": {
+		"devdoc": "bin/devdoc",
+		"readme": "bin/readme"
+	},
+	"oclif": {
+		"bin": "devdoc",
+		"commands": "./dist/src/cli/commands"
+	},
+	"files": [
+		"bin/devdoc",
+		"bin/readme",
+		"dist/**/*.js",
+		"dist/**/*.d.ts",
+		"dist/**/*.js.map",
+		"lib/cli-help.txt",
+		"lib/icons",
+		"lib/templates",
+		"scripts/infer_onnx_shapes.py",
+		"scripts/parse_mlir.py",
+		"scripts/setup-python-deps.sh",
+		"media/devdoc-favicon-96x96.png",
+		"media/devdoc-logo-term.png"
+	],
+	"author": "Tan Li",
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "http://github.com/litanlitudan/devdoc.git"
+	},
+	"dependencies": {
+		"@oclif/core": "^4.0.0",
+		"ai-edge-model-explorer-visualizer": "^0.1.2",
+		"chalk": "^5.3.0",
+		"chokidar": "^3.6.0",
+		"compression": "^1.7.4",
+		"execa": "^9.0.0",
+		"express": "^4.21.1",
+		"handlebars": "^4.7.8",
+		"highlight.js": "^11.10.0",
+		"highlightjs-mlir": "^0.0.1",
+		"http-errors": "^2.0.0",
+		"inquirer": "^12.0.0",
+		"is-online": "^10.0.0",
+		"less": "^4.2.0",
+		"markdown-it": "^14.1.0",
+		"markdown-it-anchor": "^9.2.0",
+		"markdown-it-emoji": "^3.0.0",
+		"markdown-it-highlightjs": "^4.2.0",
+		"markdown-it-include": "^2.0.0",
+		"markdown-it-mathjax3": "^4.3.2",
+		"markdown-it-table-of-contents": "^0.8.0",
+		"markdown-it-task-lists": "^2.1.1",
+		"mime-types": "^2.1.35",
+		"multer": "^2.0.2",
+		"onnx-proto": "^8.0.1",
+		"open": "^10.1.0",
+		"ora": "^8.1.0",
+		"p-queue": "^8.0.0",
+		"pino": "^9.0.0",
+		"pino-pretty": "^11.0.0",
+		"serve-static": "^1.16.2",
+		"vanilla-jsoneditor": "^3.10.0",
+		"ws": "^8.18.0",
+		"zod": "^3.23.0"
+	},
+	"devDependencies": {
+		"@oclif/test": "^4.0.0",
+		"@types/compression": "^1.8.1",
+		"@types/express": "^5.0.3",
+		"@types/handlebars": "^4.0.40",
+		"@types/http-errors": "^2.0.0",
+		"@types/inquirer": "^9.0.0",
+		"@types/less": "^3.0.8",
+		"@types/markdown-it": "^14.1.2",
+		"@types/mime-types": "^3.0.1",
+		"@types/multer": "^2.0.0",
+		"@types/node": "^20.16.11",
+		"@types/supertest": "^6.0.0",
+		"@types/ws": "^8.18.1",
+		"@vitest/ui": "^2.1.3",
+		"eslint": "^9.13.0",
+		"eslint-config-prettier": "^9.1.0",
+		"form-data": "^4.0.4",
+		"get-port": "^7.1.0",
+		"husky": "^9.1.6",
+		"lint-staged": "^15.2.10",
+		"node-fetch": "^3.3.2",
+		"node-mocks-http": "^1.14.0",
+		"prettier": "^3.3.3",
+		"supertest": "^7.0.0",
+		"typescript": "^5.6.3",
+		"vitest": "^2.1.3",
+		"zod-openapi": "^2.19.0"
+	},
+	"prettier": {
+		"semi": false,
+		"singleQuote": true,
+		"tabWidth": 2,
+		"useTabs": true
+	},
+	"eslintConfig": {
+		"env": {
+			"node": true,
+			"es2024": true
+		},
+		"extends": [
+			"eslint:recommended",
+			"prettier"
+		],
+		"parserOptions": {
+			"ecmaVersion": 2024,
+			"sourceType": "module"
+		}
+	},
+	"lint-staged": {
+		"*.{js,ts}": [
+			"eslint --fix",
+			"prettier --write"
+		],
+		"*.{json,md,yml}": [
+			"prettier --write"
+		]
+	}
 }
