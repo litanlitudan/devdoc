@@ -1,0 +1,6 @@
+log.mlir
+*.ll
+*.s
+*.ptx
+*.sass
+*.out
