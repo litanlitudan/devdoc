@@ -20,3 +20,4 @@ third_party/model-explorer/src/builtin-adapter/bazel-*
 devdocs/SIGNALS.md
 .beads/
 devdocs/logs
+tests/mlir/models/
