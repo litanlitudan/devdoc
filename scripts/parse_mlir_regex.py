@@ -25,7 +25,7 @@ import sys
 import json
 import re
 import hashlib
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 from dataclasses import dataclass, field, asdict
 
 
@@ -71,7 +71,7 @@ class GraphNode:
     inputsMetadata: List[MetadataItem] = field(default_factory=list)
     outputsMetadata: List[MetadataItem] = field(default_factory=list)
     subgraphIds: List[str] = field(default_factory=list)
-    style: GraphNodeStyle = None
+    style: Optional[GraphNodeStyle] = None
 
 
 @dataclass
@@ -296,13 +296,16 @@ def parse_mlir_operations(mlir_content: str) -> List[MLIROperation]:
         re.MULTILINE
     )
 
-    # Pattern 8: Linalg operations with ins/outs: %result = linalg.op {...} ins(...) outs(...) {...}
-    linalg_pattern = re.compile(
+    # Pattern 8: Operations with ins/outs syntax: %result = dialect.op {...} ins(...) outs(...) -> type
+    # This pattern is dialect-agnostic - it matches ANY operation using ins/outs syntax
+    # (primarily linalg, but not hardcoded to it)
+    ins_outs_pattern = re.compile(
         r'(%[\w]+(?:,\s*%[\w]+)*)\s*=\s*'  # outputs
-        r'(linalg\.[\w]+)\s+'  # operation (linalg.generic, linalg.matmul, etc.)
+        r'([\w]+\.[\w]+)\s+'  # operation (any dialect.operation)
         r'(?:\{[^}]+\}\s+)?'  # optional attributes block
-        r'ins\(([^)]+)\)\s+'  # ins clause
-        r'outs\(([^)]+)\)',  # outs clause
+        r'ins\(([^)]+)\)\s+'  # ins clause (keyword detection)
+        r'outs\(([^)]+)\)\s*'  # outs clause (keyword detection)
+        r'(?:->\s*(.+?))?(?:\s|$)',  # optional -> result_type
         re.MULTILINE
     )
 
@@ -337,9 +340,9 @@ def parse_mlir_operations(mlir_content: str) -> List[MLIROperation]:
     for match in call_with_result_pattern.finditer(mlir_content):
         all_matches.append(('call_with_result', match.start(), match))
 
-    # Pattern 8: Linalg operations
-    for match in linalg_pattern.finditer(mlir_content):
-        all_matches.append(('linalg', match.start(), match))
+    # Pattern 8: Operations with ins/outs syntax (dialect-agnostic)
+    for match in ins_outs_pattern.finditer(mlir_content):
+        all_matches.append(('ins_outs', match.start(), match))
 
     # Sort by position to preserve original order
     all_matches.sort(key=lambda x: x[1])
@@ -347,6 +350,13 @@ def parse_mlir_operations(mlir_content: str) -> List[MLIROperation]:
     # Process matches in order
     operations = []
     for match_type, _, match in all_matches:
+        # Initialize variables to avoid "possibly unbound" warnings
+        attrs_str = ""
+        result_types_str = ""
+        outputs: List[str] = []
+        op_type = ""
+        inputs: List[str] = []
+
         if match_type == 'quoted_result':
             outputs = [s.strip() for s in match.group(1).split(',')]
             op_type = match.group(2)
@@ -403,15 +413,21 @@ def parse_mlir_operations(mlir_content: str) -> List[MLIROperation]:
                 inputs.extend(extract_ssa_values(args_str))
             attrs_str = ""  # Call operations don't have attributes in this syntax
             result_types_str = match.group(5)
-        elif match_type == 'linalg':
+        elif match_type == 'ins_outs':
             outputs = [s.strip() for s in match.group(1).split(',')]
-            op_type = match.group(2)  # "linalg.generic", "linalg.matmul", etc.
+            op_type = match.group(2)  # Any dialect operation using ins/outs syntax
             ins_str = match.group(3)  # ins clause
             outs_str = match.group(4)  # outs clause
             # Extract inputs from both ins() and outs()
             inputs = extract_ssa_values(ins_str) + extract_ssa_values(outs_str)
-            attrs_str = ""  # Attributes are complex for linalg, skip for now
-            result_types_str = ""  # Will be inferred from outs
+            attrs_str = ""  # Attributes are complex for ops with ins/outs, skip for now
+            result_types_str = match.group(5) or ""  # Result type from -> clause (if present)
+
+            # If no -> clause, parse types from outs clause
+            # Format: outs(%values : types)
+            if not result_types_str and ':' in outs_str:
+                types_part = outs_str.split(':', 1)[1].strip()
+                result_types_str = types_part
 
         # Parse attributes
         attributes = {}
@@ -423,9 +439,14 @@ def parse_mlir_operations(mlir_content: str) -> List[MLIROperation]:
                 attributes[key] = value
 
         # Parse result types
-        result_types = [t.strip() for t in result_types_str.split('->') if t.strip()]
-        if result_types:
-            result_types = [result_types[-1]]  # Take the final result type
+        if '->' in result_types_str:
+            # Split by -> and take the final result type (handles : type -> result patterns)
+            result_types = [t.strip() for t in result_types_str.split('->') if t.strip()]
+            if result_types:
+                result_types = [result_types[-1]]  # Take the final result type
+        else:
+            # Split by commas for multiple result types (handles linalg with multiple outputs)
+            result_types = [t.strip() for t in result_types_str.split(',') if t.strip()]
 
         operations.append(MLIROperation(
             outputs=outputs,
@@ -1013,7 +1034,7 @@ def generate_edge_overlays_for_graph(graph: Graph, function_name: str) -> EdgeOv
 def create_graph_for_function(
     function: MLIRFunction,
     node_id_offset: int = 0,
-    available_functions: List[str] = None
+    available_functions: Optional[List[str]] = None
 ) -> Tuple[Graph, int]:
     """
     Create a Model Explorer Graph for a single function.
