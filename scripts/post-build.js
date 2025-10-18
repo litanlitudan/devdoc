@@ -39,6 +39,7 @@ const copyAsset = (source, destination) => {
 const assetMap = [
 	['lib/templates', path.join(distDir, 'lib', 'templates')],
 	['lib/icons', path.join(distDir, 'lib', 'icons')],
+	['lib/model-explorer', path.join(distDir, 'lib', 'model-explorer')],
 	['lib/cli-help.txt', path.join(distDir, 'lib', 'cli-help.txt')],
 ]
 

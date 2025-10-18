@@ -21,16 +21,14 @@
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true
 	},
-	"include": [
-		"lib/**/*.ts",
-		"src/**/*.ts"
-	],
+	"include": ["lib/**/*.ts", "src/**/*.ts"],
 	"exclude": [
 		"node_modules",
 		"dist",
 		"coverage",
 		"tests",
 		"bin",
-		"lib/legacy"
+		"lib/legacy",
+		"src/mlir/build"
 	]
 }

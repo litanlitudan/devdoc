@@ -4,11 +4,17 @@
  * This module converts MLIR (Multi-Level Intermediate Representation) text
  * into a graph format compatible with Google's Model Explorer visualization tool.
  *
- * Parses MLIR text directly in Python using regex patterns and constructs
- * Model Explorer graph structures. Supports ALL MLIR dialects by treating
- * operations as generic graph nodes.
+ * **Parser Implementation:**
+ * - **Primary**: C++ MLIR context-based parser (if built) - Implements the documented
+ *   universal MLIR parser pipeline with proper dialect registration, ModuleOp parsing,
+ *   and full region traversal
+ * - **Fallback**: Python regex-based parser - Lightweight, dependency-free parsing
+ *   that handles arbitrary MLIR dialects as generic operations
  *
- * Note: Requires Python 3.9+. No external dependencies required.
+ * The C++ parser provides better accuracy and performance but requires building
+ * LLVM/MLIR. See `src/mlir/BUILD.md` for build instructions.
+ *
+ * Note: Requires Python 3.9+. C++ parser is optional but recommended.
  */
 
 import { execFileSync } from 'child_process'
@@ -22,20 +28,21 @@ export interface GraphNode {
 	id: string
 	label: string
 	namespace: string
-	attrs: Array<{key: string; value: string}>
+	attrs: Array<{ key: string; value: string }>
 	outputsMetadata?: Array<{
 		id: string
-		attrs: Array<{key: string; value: string}>
+		attrs: Array<{ key: string; value: string }>
 	}>
 	inputsMetadata?: Array<{
 		id: string
-		attrs: Array<{key: string; value: string}>
+		attrs: Array<{ key: string; value: string }>
 	}>
 	incomingEdges: Array<{
 		sourceNodeId: string
 		sourceNodeOutputId?: string
 		targetNodeInputId?: string
 	}>
+	subgraphIds?: string[]
 }
 
 export interface ModelExplorerGraph {
@@ -43,21 +50,38 @@ export interface ModelExplorerGraph {
 	nodes: GraphNode[]
 }
 
+export interface ModelExplorerGraphs {
+	graphs: ModelExplorerGraph[]
+}
+
 /**
- * Convert MLIR text to Model Explorer graph format using direct Python parser
+ * Convert MLIR text to Model Explorer graph format
  *
- * Parses MLIR text directly using Python regex patterns and constructs
- * Model Explorer graph structures. Supports arbitrary MLIR dialects.
+ * Uses C++ MLIR context-based parser if available, with automatic fallback
+ * to Python regex parser. The C++ parser implements the full documented
+ * pipeline with proper dialect registration and region traversal.
+ *
+ * Returns multi-graph format with one graph per function.
  *
  * @param mlirContent The MLIR text content to parse
- * @param filename The filename to use as the graph ID
- * @returns A graph object compatible with Model Explorer
+ * @param filename The filename to use as the base graph ID
+ * @returns A graphs object containing one graph per function
  * @throws Error if Python is not available or parsing fails
  */
-export function convertMLIRToGraph(mlirContent: string, filename: string): ModelExplorerGraph {
+export function convertMLIRToGraph(
+	mlirContent: string,
+	filename: string,
+): ModelExplorerGraphs {
 	try {
-		// Path to Python script (relative to compiled JS location in dist/)
-		const scriptPath = join(__dirname, '..', 'scripts', 'parse_mlir.py')
+		// Path to wrapper script that tries C++ parser first, falls back to Python regex
+		// (relative to compiled JS location in dist/lib/)
+		const scriptPath = join(
+			__dirname,
+			'..',
+			'..',
+			'scripts',
+			'parse_mlir_cpp.py',
+		)
 
 		// Run Python MLIR parser with filename as argument
 		// Use 'python' in conda environment, otherwise 'python3'
@@ -66,7 +90,7 @@ export function convertMLIRToGraph(mlirContent: string, filename: string): Model
 			input: mlirContent,
 			maxBuffer: 50 * 1024 * 1024, // 50MB max buffer
 			timeout: 30000, // 30 second timeout
-			encoding: 'utf-8'
+			encoding: 'utf-8',
 		})
 
 		const result = JSON.parse(resultJson)
@@ -77,25 +101,25 @@ export function convertMLIRToGraph(mlirContent: string, filename: string): Model
 			throw new Error(result.message)
 		}
 
-		console.log('✓ Python MLIR parsing successful')
-		return result as ModelExplorerGraph
-
+		console.log(
+			`✓ Python MLIR parsing successful (${result.graphs?.length || 0} graphs)`,
+		)
+		return result as ModelExplorerGraphs
 	} catch (error: any) {
 		// Provide helpful error messages for system-level errors
 		if (error.code === 'ENOENT') {
 			throw new Error(
-				'Python not found. Please install Python 3.9+ and ensure it is in your PATH.'
+				'Python not found. Please install Python 3.9+ and ensure it is in your PATH.',
 			)
-		} else if (error.message?.includes('INVALID_ARGUMENT') || error.message?.includes('Failed to parse')) {
+		} else if (
+			error.message?.includes('INVALID_ARGUMENT') ||
+			error.message?.includes('Failed to parse')
+		) {
 			throw error // Re-throw parsing errors directly (these are MLIR syntax errors)
 		} else if (error.status !== undefined) {
-			throw new Error(
-				`Python MLIR parser failed (exit code ${error.status}).`
-			)
+			throw new Error(`Python MLIR parser failed (exit code ${error.status}).`)
 		} else {
-			throw new Error(
-				`MLIR parsing error: ${error.message}`
-			)
+			throw new Error(`MLIR parsing error: ${error.message}`)
 		}
 	}
 }
@@ -114,7 +138,7 @@ export function createTestGraph(filename: string): ModelExplorerGraph {
 				label: 'Start',
 				namespace: '',
 				attrs: [],
-				incomingEdges: []
+				incomingEdges: [],
 			},
 			{
 				id: 'node_1',
@@ -123,9 +147,9 @@ export function createTestGraph(filename: string): ModelExplorerGraph {
 				attrs: [],
 				incomingEdges: [
 					{
-						sourceNodeId: 'node_0'
-					}
-				]
+						sourceNodeId: 'node_0',
+					},
+				],
 			},
 			{
 				id: 'node_2',
@@ -134,10 +158,10 @@ export function createTestGraph(filename: string): ModelExplorerGraph {
 				attrs: [],
 				incomingEdges: [
 					{
-						sourceNodeId: 'node_1'
-					}
-				]
-			}
-		]
+						sourceNodeId: 'node_1',
+					},
+				],
+			},
+		],
 	}
 }

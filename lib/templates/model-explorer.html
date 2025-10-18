@@ -116,12 +116,27 @@
 					throw new Error('Graph data is null or undefined');
 				}
 
-				if (!graphData.nodes || !Array.isArray(graphData.nodes)) {
-					throw new Error('Graph data.nodes is missing or not an array');
+				// Handle both multi-graph format and single graph format
+				let graphs;
+				if (graphData.graphs && Array.isArray(graphData.graphs)) {
+					// Multi-graph format: {graphs: [{id, nodes}, ...]}
+					graphs = graphData.graphs;
+				} else if (graphData.nodes && Array.isArray(graphData.nodes)) {
+					// Single graph format: {id, nodes}
+					graphs = [graphData];
+				} else {
+					throw new Error('Graph data must contain either .graphs array or .nodes array');
 				}
 
-				if (graphData.nodes.length === 0) {
-					throw new Error('No graph nodes found in MLIR file');
+				if (graphs.length === 0) {
+					throw new Error('No graphs found in MLIR file');
+				}
+
+				// Validate each graph has nodes
+				for (const graph of graphs) {
+					if (!graph.nodes || !Array.isArray(graph.nodes)) {
+						throw new Error(`Graph "${graph.id || 'unknown'}" is missing nodes array`);
+					}
 				}
 
 				// Create and configure the visualizer
@@ -130,13 +145,25 @@
 				// Set graph collections with proper structure
 				const graphCollections = [{
 					label: '{{filename}}',
-					graphs: [graphData]
+					graphs: graphs
 				}];
 
 				visualizer.graphCollections = graphCollections;
 
-				// Configure visualizer - minimal config
-				visualizer.config = {};
+				// Configure default visualization settings
+				// Note: Model Explorer persists user's "View on Node/Edge" selections in localStorage.
+				// This config ensures the options are available. Users can select their preferences
+				// from the UI, and they will be remembered across sessions.
+				visualizer.config = {
+					// Ensure "View on Node" options are available (not hidden)
+					viewOnNodeConfig: {
+						hideOpNodeId: false,           // ✓ Show "Op node id" option
+						hideOpNodeInputs: false,       // ✓ Show "Op node inputs" option
+						hideOpNodeOutputs: false,      // ✓ Show "Op node outputs" option
+						hideOpNodeAttributes: false,   // ✓ Keep attributes option available
+						hideLayerNodeChildrenCount: false  // ✓ Keep layer children count available
+					}
+				};
 
 				// Add to DOM
 				const container = document.querySelector('.visualizer-container');
