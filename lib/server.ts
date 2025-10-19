@@ -48,7 +48,7 @@ import type {
 	ImplantOptions,
 	ImplantHandlers,
 	FileTypes,
-	HttpServerResult
+	HttpServerResult,
 } from './types.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -99,13 +99,13 @@ const style: StyleColors = {
 	github: chalk.blue.underline.italic,
 	address: chalk.greenBright.underline.italic,
 	port: chalk.reset.cyanBright,
-	pid: chalk.reset.cyanBright
+	pid: chalk.reset.cyanBright,
 }
 
 // Simple implant replacement for template variable substitution
 const processTemplate = async (
 	html: string,
-	handlers: Record<string, (varName: string) => Promise<string | false>>
+	handlers: Record<string, (varName: string) => Promise<string | false>>,
 ): Promise<string> => {
 	let result = html
 	// Match both {{varName}} and {varName} syntax
@@ -140,13 +140,23 @@ const processTemplate = async (
 }
 
 const slugify = (text: string): string => {
-	return text.toLowerCase().replace(/\s/g, '-')
-		// Remove punctuations other than hyphen and underscore
-		.replace(/[`~!@#$%^&*()+=<>?,./:;"'|{}[\]\\\u2000-\u206F\u2E00-\u2E7F]/g, '')
-		// Remove emojis
-		.replace(emojiRegex, '')
-		// Remove CJK punctuations
-		.replace(/[\u3000。？！，、；：""【】（）〔〕［］﹃﹄""''﹁﹂—…－～《》〈〉「」]/g, '')
+	return (
+		text
+			.toLowerCase()
+			.replace(/\s/g, '-')
+			// Remove punctuations other than hyphen and underscore
+			.replace(
+				/[`~!@#$%^&*()+=<>?,./:;"'|{}[\]\\\u2000-\u206F\u2E00-\u2E7F]/g,
+				'',
+			)
+			// Remove emojis
+			.replace(emojiRegex, '')
+			// Remove CJK punctuations
+			.replace(
+				/[\u3000。？！，、；：""【】（）〔〕［］﹃﹄""''﹁﹂—…－～《》〈〉「」]/g,
+				'',
+			)
+	)
 }
 
 const formatFileSize = (bytes: number): string => {
@@ -159,11 +169,25 @@ const formatFileSize = (bytes: number): string => {
 
 // Custom Mermaid and MLIR plugin for markdown-it
 const customFencePlugin = (md: MarkdownIt): void => {
-	const defaultRender = md.renderer.rules.fence || function(tokens: Token[], idx: number, options: Options, _env: any, renderer: Renderer): string {
-		return renderer.renderToken(tokens, idx, options)
-	}
+	const defaultRender =
+		md.renderer.rules.fence ||
+		function (
+			tokens: Token[],
+			idx: number,
+			options: Options,
+			_env: any,
+			renderer: Renderer,
+		): string {
+			return renderer.renderToken(tokens, idx, options)
+		}
 
-	md.renderer.rules.fence = function(tokens: Token[], idx: number, options: Options, _env: any, renderer: Renderer): string {
+	md.renderer.rules.fence = function (
+		tokens: Token[],
+		idx: number,
+		options: Options,
+		_env: any,
+		renderer: Renderer,
+	): string {
 		const token = tokens[idx]
 		const info = token.info ? md.utils.unescapeAll(token.info).trim() : ''
 
@@ -187,12 +211,13 @@ const customFencePlugin = (md: MarkdownIt): void => {
 // Text to HTML conversion function with syntax highlighting
 const textToHTML = (text: string, filePath: string = ''): string => {
 	// Escape HTML characters
-	const escapeHtml = (str: string): string => str
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#039;')
+	const escapeHtml = (str: string): string =>
+		str
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;')
 
 	// Map file extensions to highlight.js language codes
 	const extensionToLanguage: Record<string, string> = {
@@ -296,7 +321,7 @@ const textToHTML = (text: string, filePath: string = ''): string => {
 		'.jinja2': 'jinja',
 		'.fbs': 'flatbuffers',
 		'.diff': 'diff',
-		'.patch': 'diff'
+		'.patch': 'diff',
 	}
 
 	// Determine the language based on file extension
@@ -310,9 +335,18 @@ const textToHTML = (text: string, filePath: string = ''): string => {
 		const basenameLower = basename.toLowerCase()
 
 		// Match Dockerfile, dockerfile, and any Dockerfile.* variant
-		if (basenameLower === 'dockerfile' || basenameLower.startsWith('dockerfile.')) language = 'dockerfile'
+		if (
+			basenameLower === 'dockerfile' ||
+			basenameLower.startsWith('dockerfile.')
+		)
+			language = 'dockerfile'
 		// Match Makefile, makefile, GNUmakefile, and any Makefile.* variant
-		if (basenameLower === 'makefile' || basenameLower.startsWith('makefile.') || basenameLower === 'gnumakefile') language = 'makefile'
+		if (
+			basenameLower === 'makefile' ||
+			basenameLower.startsWith('makefile.') ||
+			basenameLower === 'gnumakefile'
+		)
+			language = 'makefile'
 		if (basenameLower === 'cmakelists.txt') language = 'cmake'
 	}
 
@@ -324,22 +358,24 @@ const textToHTML = (text: string, filePath: string = ''): string => {
 // Log file to HTML conversion function with color highlighting
 const logToHTML = (logText: string): string => {
 	// Escape HTML characters
-	const escapeHtml = (str: string): string => str
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#039;')
+	const escapeHtml = (str: string): string =>
+		str
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;')
 
 	// Process each line with enhanced formatting
 	const lines = logText.split('\n')
-	const highlightedLines = lines.map(line => {
+	const highlightedLines = lines.map((line) => {
 		if (!line.trim()) return '' // Preserve empty lines
 
 		const escapedLine = escapeHtml(line)
 
 		// Parse structured log format: timestamp | LEVEL | message
-		const structuredLogPattern = /^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d{3})?)\s*\|\s*(\w+)\s*\|\s*(.*)$/
+		const structuredLogPattern =
+			/^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d{3})?)\s*\|\s*(\w+)\s*\|\s*(.*)$/
 		const structuredMatch = line.match(structuredLogPattern)
 
 		if (structuredMatch) {
@@ -353,13 +389,14 @@ const logToHTML = (logText: string): string => {
 			let messageColor: string
 			let bgStyle = ''
 
-			switch(escapedLevel) {
+			switch (escapedLevel) {
 				case 'ERROR':
 				case 'FATAL':
 				case 'CRITICAL':
 					levelColor = '#ffffff'
 					messageColor = '#ff6b6b'
-					bgStyle = 'background: rgba(220, 53, 69, 0.3); padding: 2px 6px; border-radius: 3px;'
+					bgStyle =
+						'background: rgba(220, 53, 69, 0.3); padding: 2px 6px; border-radius: 3px;'
 					break
 				case 'WARNING':
 				case 'WARN':
@@ -402,7 +439,7 @@ const logToHTML = (logText: string): string => {
 			let levelColor: string
 			let messageColor: string
 
-			switch(escapedLevel) {
+			switch (escapedLevel) {
 				case 'ERROR':
 				case 'FATAL':
 				case 'CRITICAL':
@@ -449,7 +486,9 @@ const logToHTML = (logText: string): string => {
 			return `<span style="color: #74c0fc;">${escapedLine}</span>`
 		}
 		// SUCCESS - Green
-		if (/\b(SUCCESS|SUCCESSFUL|OK|PASS|PASSED|COMPLETE|COMPLETED)\b/i.test(line)) {
+		if (
+			/\b(SUCCESS|SUCCESSFUL|OK|PASS|PASSED|COMPLETE|COMPLETED)\b/i.test(line)
+		) {
 			return `<span style="color: #51cf66;">${escapedLine}</span>`
 		}
 		// DEBUG/TRACE - Gray
@@ -501,13 +540,13 @@ const mlirToHTML = (mlirText: string): string => {
 
 const md = new MarkdownIt({
 	linkify: false,
-	html: true
+	html: true,
 })
 	.use(mdItAnchor, {
 		slugify,
 		permalink: mdItAnchor.permalink.headerLink({
-			safariReaderFix: true
-		})
+			safariReaderFix: true,
+		}),
 	})
 	.use(mdItTaskLists)
 	.use(mdItHLJS as unknown as PluginSimple)
@@ -516,7 +555,7 @@ const md = new MarkdownIt({
 	.use(customFencePlugin)
 	.use(mdItTOC, {
 		includeLevel: [1, 2, 3, 4, 5, 6],
-		slugify
+		slugify,
 	})
 
 // Markdown Extension Types
@@ -530,26 +569,16 @@ const fileTypes: FileTypes = {
 		'.mdwn',
 		'.mdtxt',
 		'.mdtext',
-		'.text'
+		'.text',
 	],
 
-	html: [
-		'.html',
-		'.htm'
-	],
+	html: ['.html', '.htm'],
 
-	mlir: [
-		'.mlir'
-	],
+	mlir: ['.mlir'],
 
-	onnx: [
-		'.onnx'
-	],
+	onnx: ['.onnx'],
 
-	diff: [
-		'.diff',
-		'.patch'
-	],
+	diff: ['.diff', '.patch'],
 
 	text: [
 		'.txt',
@@ -613,7 +642,7 @@ const fileTypes: FileTypes = {
 		'dockerfile',
 		'Dockerfile.dev',
 		'Dockerfile.prod',
-		'Dockerfile.test'
+		'Dockerfile.test',
 	],
 
 	watch: [
@@ -627,7 +656,7 @@ const fileTypes: FileTypes = {
 		'.jpg',
 		'.jpeg',
 		'.mlir',
-		'.onnx'
+		'.onnx',
 	],
 
 	// Directories and patterns to exclude from file watching and processing
@@ -681,14 +710,17 @@ const fileTypes: FileTypes = {
 
 		// Dependency lock files and configs that shouldn't be watched
 		'*.lock',
-		'*.log'
-	]
+		'*.log',
+	],
 }
 
 // Enhanced exclusion pattern matching with error handling
 // Note: Currently unused but kept for future use in file filtering
 // @ts-expect-error - Function is currently unused but kept for future implementation
-const isExcluded = (filePath: string, exclusions: string[] = fileTypes.exclusions): boolean => {
+const isExcluded = (
+	filePath: string,
+	exclusions: string[] = fileTypes.exclusions,
+): boolean => {
 	if (!filePath || typeof filePath !== 'string') {
 		return false
 	}
@@ -696,7 +728,7 @@ const isExcluded = (filePath: string, exclusions: string[] = fileTypes.exclusion
 	// Normalize path separators for cross-platform compatibility
 	const normalizedPath = filePath.replace(/\\/g, '/')
 
-	return exclusions.some(pattern => {
+	return exclusions.some((pattern) => {
 		try {
 			// Handle glob patterns
 			if (pattern.includes('*')) {
@@ -709,19 +741,25 @@ const isExcluded = (filePath: string, exclusions: string[] = fileTypes.exclusion
 
 			// Handle directory patterns (ending with /)
 			if (pattern.endsWith('/')) {
-				return normalizedPath.includes(`/${pattern}`) ||
-				       normalizedPath.startsWith(pattern) ||
-				       normalizedPath.includes(`/${pattern.slice(0, -1)}/`)
+				return (
+					normalizedPath.includes(`/${pattern}`) ||
+					normalizedPath.startsWith(pattern) ||
+					normalizedPath.includes(`/${pattern.slice(0, -1)}/`)
+				)
 			}
 
 			// Handle exact file matches
-			return normalizedPath.endsWith(`/${pattern}`) ||
-			       normalizedPath === pattern ||
-			       normalizedPath.includes(`/${pattern}`)
-
+			return (
+				normalizedPath.endsWith(`/${pattern}`) ||
+				normalizedPath === pattern ||
+				normalizedPath.includes(`/${pattern}`)
+			)
 		} catch (_error) {
 			const err = _error as Error
-			console.warn(`Error matching exclusion pattern "${pattern}" against "${filePath}":`, err.message)
+			console.warn(
+				`Error matching exclusion pattern "${pattern}" against "${filePath}":`,
+				err.message,
+			)
 			return false
 		}
 	})
@@ -732,7 +770,7 @@ const validateExclusions = (exclusions: string[]): string[] => {
 	const invalid: any[] = []
 	const valid: string[] = []
 
-	exclusions.forEach(pattern => {
+	exclusions.forEach((pattern) => {
 		if (typeof pattern !== 'string' || pattern.length === 0) {
 			invalid.push(pattern)
 		} else if (pattern.includes('..') || pattern.includes('//')) {
@@ -784,14 +822,24 @@ const msg = (type: string, msg: string, flags: Flags): void => {
 		return log(`${chalk.bgYellow.black('    GitHub  ')} ${msg}`, flags)
 	}
 
-	log(chalk.bgGreen.black('  Devdoc  ') + chalk.white(` ${type}: `) + msg, flags)
+	log(
+		chalk.bgGreen.black('  Devdoc  ') + chalk.white(` ${type}: `) + msg,
+		flags,
+	)
 }
 
 const errormsg = (type: string, msg: string, flags: Flags, err?: Error): void =>
-	log(chalk.bgRed.white('  Devdoc  ') + chalk.red(` ${type}: `) + msg, flags, err)
+	log(
+		chalk.bgRed.white('  Devdoc  ') + chalk.red(` ${type}: `) + msg,
+		flags,
+		err,
+	)
 
 const warnmsg = (type: string, msg: string, flags: Flags): void =>
-	log(chalk.bgYellow.black('  Devdoc  ') + chalk.yellow(` ${type}: `) + msg, flags)
+	log(
+		chalk.bgYellow.black('  Devdoc  ') + chalk.yellow(` ${type}: `) + msg,
+		flags,
+	)
 
 const isType = (exts: string[], filePath: string): boolean => {
 	const fileExt = path.parse(filePath).ext
@@ -811,8 +859,10 @@ const isType = (exts: string[], filePath: string): boolean => {
 			return true
 		}
 		// Match any Makefile variant (Makefile, Makefile.build, GNUmakefile, etc.)
-		if ((ext === 'Makefile' || ext === 'GNUmakefile') &&
-		    (basenameLower.startsWith('makefile') || basenameLower === 'gnumakefile')) {
+		if (
+			(ext === 'Makefile' || ext === 'GNUmakefile') &&
+			(basenameLower.startsWith('makefile') || basenameLower === 'gnumakefile')
+		) {
 			return true
 		}
 	}
@@ -821,50 +871,56 @@ const isType = (exts: string[], filePath: string): boolean => {
 }
 
 // MarkdownToHTML: turns a Markdown file into HTML content
-const markdownToHTML = (markdownText: string): Promise<string> => new Promise((resolve, reject) => {
-	let result: string
+const markdownToHTML = (markdownText: string): Promise<string> =>
+	new Promise((resolve, reject) => {
+		let result: string
 
-	try {
-		result = md.render(markdownText)
-	} catch (error) {
-		return reject(error)
-	}
-
-	resolve(result)
-})
-
-// GetFile: reads utf8 content from a file
-const getFile = (path: string): Promise<string> => new Promise((resolve, reject) => {
-	fs.readFile(path, 'utf8', (err, data) => {
-		if (err) {
-			return reject(err)
+		try {
+			result = md.render(markdownText)
+		} catch (error) {
+			return reject(error)
 		}
 
-		resolve(data)
+		resolve(result)
 	})
-})
+
+// GetFile: reads utf8 content from a file
+const getFile = (path: string): Promise<string> =>
+	new Promise((resolve, reject) => {
+		fs.readFile(path, 'utf8', (err, data) => {
+			if (err) {
+				return reject(err)
+			}
+
+			resolve(data)
+		})
+	})
 
 // Get Custom Less CSS to use in all Markdown files
 const buildLessStyleSheet = (cssPath: string): Promise<string> =>
-	new Promise(resolve =>
-		getFile(cssPath).then(data =>
-			less.render(data).then(data =>
-				resolve(data.css)
-			)
-		)
+	new Promise((resolve) =>
+		getFile(cssPath).then((data) =>
+			less.render(data).then((data) => resolve(data.css)),
+		),
 	)
 
 interface HandlebarData {
 	[key: string]: any
 }
 
-const baseTemplate = (templateUrl: string, handlebarData: HandlebarData): Promise<string> => new Promise((resolve, reject) => {
-	getFile(templateUrl).then(source => {
-		const template = handlebars.compile(source)
-		const output = template(handlebarData)
-		resolve(output)
-	}).catch(reject)
-})
+const baseTemplate = (
+	templateUrl: string,
+	handlebarData: HandlebarData,
+): Promise<string> =>
+	new Promise((resolve, reject) => {
+		getFile(templateUrl)
+			.then((source) => {
+				const template = handlebars.compile(source)
+				const output = template(handlebarData)
+				resolve(output)
+			})
+			.catch(reject)
+	})
 
 const dirToHtml = (filePath: string): DirectoryInfo => {
 	const urls = fs.readdirSync(filePath)
@@ -883,16 +939,17 @@ const dirToHtml = (filePath: string): DirectoryInfo => {
 
 	// For display, we want to show the actual filename with special characters
 	// but escape HTML to prevent injection
-	const escapeHtml = (str: string): string => str
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#039;')
+	const escapeHtml = (str: string): string =>
+		str
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;')
 
 	// Collect items with their metadata
 	const items: FileInfo[] = []
-	urls.forEach(subPath => {
+	urls.forEach((subPath) => {
 		if (subPath.charAt(0) === '.') {
 			return
 		}
@@ -907,7 +964,7 @@ const dirToHtml = (filePath: string): DirectoryInfo => {
 			isDirectory: isDir,
 			mtime: stats.mtime,
 			birthtime: stats.birthtime,
-			size: stats.size
+			size: stats.size,
 		})
 	})
 
@@ -921,15 +978,17 @@ const dirToHtml = (filePath: string): DirectoryInfo => {
 
 		// Then sort by modification time (newest first)
 		// Use birthtime if file was never modified (mtime === birthtime)
-		const aTime = a.mtime.getTime() === a.birthtime.getTime() ? a.birthtime : a.mtime
-		const bTime = b.mtime.getTime() === b.birthtime.getTime() ? b.birthtime : b.mtime
+		const aTime =
+			a.mtime.getTime() === a.birthtime.getTime() ? a.birthtime : a.mtime
+		const bTime =
+			b.mtime.getTime() === b.birthtime.getTime() ? b.birthtime : b.mtime
 
 		return bTime.getTime() - aTime.getTime()
 	})
 
 	// Generate HTML from sorted items
 	let list = '<ul>\n'
-	items.forEach(item => {
+	items.forEach((item) => {
 		const encodedPath = encodeURIComponent(item.name)
 
 		if (item.isDirectory) {
@@ -952,7 +1011,7 @@ const dirToHtml = (filePath: string): DirectoryInfo => {
 	return {
 		html: list,
 		fileCount,
-		folderCount
+		folderCount,
 	}
 }
 
@@ -969,7 +1028,10 @@ const getPathFromUrl = (url: string): string => {
 // while keeping forward slashes as path separators
 const encodeUrlPath = (urlPath: string): string => {
 	// Split by /, encode each segment, then rejoin with /
-	return urlPath.split('/').map(segment => encodeURIComponent(segment)).join('/')
+	return urlPath
+		.split('/')
+		.map((segment) => encodeURIComponent(segment))
+		.join('/')
 }
 
 const secureUrl = (url: string): string => {
@@ -981,10 +1043,12 @@ const secureUrl = (url: string): string => {
 
 // Create breadcrumb trail tracks
 const createBreadcrumbs = (path: string): Breadcrumb[] => {
-	const crumbs: Breadcrumb[] = [{
-		href: '/',
-		text: './'
-	}]
+	const crumbs: Breadcrumb[] = [
+		{
+			href: '/',
+			text: './',
+		},
+	]
 
 	const dirParts = path.replace(/(^\/+|\/+$)/g, '').split('/')
 	const urlParts = dirParts.map(secureUrl)
@@ -1000,7 +1064,7 @@ const createBreadcrumbs = (path: string): Breadcrumb[] => {
 
 		const crumb: Breadcrumb = {
 			href: fullLink,
-			text: `${dirName}/`
+			text: `${dirName}/`,
 		}
 
 		crumbs.push(crumb)
@@ -1011,21 +1075,27 @@ const createBreadcrumbs = (path: string): Breadcrumb[] => {
 }
 
 // Analytics helper functions
-const logPageVisit = (req: Request, _filePath: string, fileType?: string): void => {
+const logPageVisit = (
+	req: Request,
+	_filePath: string,
+	fileType?: string,
+): void => {
 	const visitPath = getPathFromUrl(req.originalUrl)
 
 	// Exclude only devdoc internal library files from analytics
 	// Track user content including Model Explorer visualizations and API downloads
 	if (
-		visitPath.startsWith('/lib/') ||           // Library files (CSS, icons, etc.)
-		visitPath.startsWith('/{devdoc}') ||     // Devdoc URL placeholders
-		visitPath === '/tracking'                   // Analytics page itself
+		visitPath.startsWith('/lib/') || // Library files (CSS, icons, etc.)
+		visitPath.startsWith('/{devdoc}') || // Devdoc URL placeholders
+		visitPath === '/tracking' // Analytics page itself
 	) {
 		return
 	}
 
 	const refererHeader = req.headers.referer || req.headers.referrer
-	const referer = Array.isArray(refererHeader) ? refererHeader[0] : (refererHeader || 'Direct')
+	const referer = Array.isArray(refererHeader)
+		? refererHeader[0]
+		: refererHeader || 'Direct'
 
 	const visit: PageVisit = {
 		timestamp: new Date(),
@@ -1034,7 +1104,7 @@ const logPageVisit = (req: Request, _filePath: string, fileType?: string): void 
 		userAgent: req.headers['user-agent'] || 'Unknown',
 		referer,
 		ip: req.ip || req.socket.remoteAddress || 'Unknown',
-		fileType
+		fileType,
 	}
 
 	// Add to analytics data with size limit
@@ -1050,13 +1120,16 @@ const generateAnalyticsStats = (): AnalyticsStats => {
 	const hourCounts = new Map<number, number>()
 	const visitorCounts = new Map<string, { visits: number; lastSeen: Date }>()
 
-	analyticsData.forEach(visit => {
+	analyticsData.forEach((visit) => {
 		// Count paths
 		pathCounts.set(visit.path, (pathCounts.get(visit.path) || 0) + 1)
 
 		// Count file types
 		if (visit.fileType) {
-			fileTypeCounts.set(visit.fileType, (fileTypeCounts.get(visit.fileType) || 0) + 1)
+			fileTypeCounts.set(
+				visit.fileType,
+				(fileTypeCounts.get(visit.fileType) || 0) + 1,
+			)
 		}
 
 		// Count by hour
@@ -1090,7 +1163,7 @@ const generateAnalyticsStats = (): AnalyticsStats => {
 	// Get visits by hour (all 24 hours)
 	const visitsByHour = Array.from({ length: 24 }, (_, hour) => ({
 		hour,
-		count: hourCounts.get(hour) || 0
+		count: hourCounts.get(hour) || 0,
 	}))
 
 	// Get top visitors
@@ -1098,7 +1171,7 @@ const generateAnalyticsStats = (): AnalyticsStats => {
 		.map(([identifier, data]) => ({
 			identifier: identifier.split('|')[0], // Show only IP for privacy
 			visits: data.visits,
-			lastSeen: data.lastSeen
+			lastSeen: data.lastSeen,
 		}))
 		.sort((a, b) => b.visits - a.visits)
 		.slice(0, 10)
@@ -1114,13 +1187,13 @@ const generateAnalyticsStats = (): AnalyticsStats => {
 		recentVisits,
 		visitsByFileType,
 		visitsByHour,
-		topVisitors
+		topVisitors,
 	}
 }
 
 // Http_request_handler: handles all the browser requests
 const createRequestHandler = (flags: Flags) => {
-	let {dir} = flags
+	let { dir } = flags
 	const isDir = fs.statSync(dir).isDirectory()
 	if (!isDir) {
 		dir = path.parse(flags.dir).dir
@@ -1129,7 +1202,7 @@ const createRequestHandler = (flags: Flags) => {
 	flags.$openLocation = path.relative(dir, flags.dir)
 
 	const implantOpts: ImplantOptions = {
-		maxDepth: 10
+		maxDepth: 10,
 	}
 
 	const devdocUrlLead = '%7Bdevdoc%7D'
@@ -1160,27 +1233,27 @@ const createRequestHandler = (flags: Flags) => {
 					day: 'numeric',
 					hour: '2-digit',
 					minute: '2-digit',
-					second: '2-digit'
+					second: '2-digit',
 				})
 			}
 
 			// Format recent visits with formatted timestamps and decoded paths for display
-			const formattedRecentVisits = stats.recentVisits.map(visit => ({
+			const formattedRecentVisits = stats.recentVisits.map((visit) => ({
 				...visit,
 				timestamp: formatTimestampWithoutTZ(visit.timestamp),
-				displayPath: decodeURIComponent(visit.path) // Decode for human-readable display
+				displayPath: decodeURIComponent(visit.path), // Decode for human-readable display
 			}))
 
 			// Format top visitors with formatted lastSeen
-			const formattedTopVisitors = stats.topVisitors.map(visitor => ({
+			const formattedTopVisitors = stats.topVisitors.map((visitor) => ({
 				...visitor,
-				lastSeen: formatTimestampWithoutTZ(visitor.lastSeen)
+				lastSeen: formatTimestampWithoutTZ(visitor.lastSeen),
 			}))
 
 			// Format top paths with decoded display names
-			const formattedTopPaths = stats.topPaths.map(pathItem => ({
+			const formattedTopPaths = stats.topPaths.map((pathItem) => ({
 				...pathItem,
-				displayPath: decodeURIComponent(pathItem.path) // Decode for human-readable display
+				displayPath: decodeURIComponent(pathItem.path), // Decode for human-readable display
 			}))
 
 			const handlebarData: HandlebarData = {
@@ -1194,18 +1267,20 @@ const createRequestHandler = (flags: Flags) => {
 				topVisitors: formattedTopVisitors,
 				currentVisitorIP,
 				pid: process.pid || 'N/A',
-				timezone: timezoneString
+				timezone: timezoneString,
 			}
 
-			baseTemplate(templateUrl, handlebarData).then(html => {
-				res.writeHead(200, {
-					'content-type': 'text/html'
+			baseTemplate(templateUrl, handlebarData)
+				.then((html) => {
+					res.writeHead(200, {
+						'content-type': 'text/html',
+					})
+					res.end(html)
 				})
-				res.end(html)
-			}).catch((error: Error) => {
-				console.error('Error rendering tracking page:', error)
-				res.status(500).send('Error generating analytics report')
-			})
+				.catch((error: Error) => {
+					console.error('Error rendering tracking page:', error)
+					res.status(500).send('Error generating analytics report')
+				})
 			return
 		}
 
@@ -1214,7 +1289,9 @@ const createRequestHandler = (flags: Flags) => {
 			const jsonFilePath = decodedUrl === '/json' ? '' : decodedUrl.substring(6) // Remove '/json/'
 
 			if (!jsonFilePath || jsonFilePath === '') {
-				res.status(400).send('Please specify a JSON file path, e.g., /json/data.json')
+				res
+					.status(400)
+					.send('Please specify a JSON file path, e.g., /json/data.json')
 				return
 			}
 
@@ -1250,7 +1327,9 @@ const createRequestHandler = (flags: Flags) => {
 						jsonData = JSON.parse(jsonContent)
 					} catch (parseError) {
 						console.error('Error parsing JSON:', parseError)
-						res.status(500).send(`Invalid JSON: ${(parseError as Error).message}`)
+						res
+							.status(500)
+							.send(`Invalid JSON: ${(parseError as Error).message}`)
 						return
 					}
 
@@ -1276,7 +1355,7 @@ const createRequestHandler = (flags: Flags) => {
 							month: 'short',
 							day: 'numeric',
 							hour: '2-digit',
-							minute: '2-digit'
+							minute: '2-digit',
 						})
 
 						// Convert JSON data to string for embedding
@@ -1300,11 +1379,19 @@ const createRequestHandler = (flags: Flags) => {
 		}
 
 		// Handle Model Explorer route (/model-explorer)
-		if (decodedUrl.startsWith('/model-explorer/') || decodedUrl === '/model-explorer') {
-			const modelFilePath = decodedUrl === '/model-explorer' ? '' : decodedUrl.substring(16) // Remove '/model-explorer/'
+		if (
+			decodedUrl.startsWith('/model-explorer/') ||
+			decodedUrl === '/model-explorer'
+		) {
+			const modelFilePath =
+				decodedUrl === '/model-explorer' ? '' : decodedUrl.substring(16) // Remove '/model-explorer/'
 
 			if (!modelFilePath || modelFilePath === '') {
-				res.status(400).send('Please specify a model file path, e.g., /model-explorer/model.mlir or /model-explorer/model.onnx')
+				res
+					.status(400)
+					.send(
+						'Please specify a model file path, e.g., /model-explorer/model.mlir or /model-explorer/model.onnx',
+					)
 				return
 			}
 
@@ -1316,7 +1403,9 @@ const createRequestHandler = (flags: Flags) => {
 			const isONNX = actualFilePath.endsWith('.onnx')
 
 			if (!isMLIR && !isONNX) {
-				res.status(400).send('Only MLIR (.mlir) and ONNX (.onnx) files are supported')
+				res
+					.status(400)
+					.send('Only MLIR (.mlir) and ONNX (.onnx) files are supported')
 				return
 			}
 
@@ -1342,7 +1431,10 @@ const createRequestHandler = (flags: Flags) => {
 						// Convert MLIR to graph format
 						let graphData
 						try {
-							graphData = convertMLIRToGraph(mlirContent, path.basename(modelFilePath))
+							graphData = convertMLIRToGraph(
+								mlirContent,
+								path.basename(modelFilePath),
+							)
 						} catch (conversionErr) {
 							console.error('Error converting MLIR to graph:', conversionErr)
 							res.status(500).send('Failed to convert MLIR to graph format')
@@ -1350,10 +1442,16 @@ const createRequestHandler = (flags: Flags) => {
 						}
 
 						// Load and render the Model Explorer template
-						const templatePath = path.join(libPath, 'templates/model-explorer.html')
+						const templatePath = path.join(
+							libPath,
+							'templates/model-explorer.html',
+						)
 						fs.readFile(templatePath, 'utf8', (templateErr, template) => {
 							if (templateErr) {
-								console.error('Error loading Model Explorer template:', templateErr)
+								console.error(
+									'Error loading Model Explorer template:',
+									templateErr,
+								)
 								res.status(500).send('Failed to load Model Explorer template')
 								return
 							}
@@ -1385,13 +1483,21 @@ const createRequestHandler = (flags: Flags) => {
 
 						// Convert ONNX to graph format (async)
 						convertONNXToGraph(onnxBuffer, path.basename(modelFilePath))
-							.then(graphData => {
+							.then((graphData) => {
 								// Load and render the Model Explorer template
-								const templatePath = path.join(libPath, 'templates/model-explorer.html')
+								const templatePath = path.join(
+									libPath,
+									'templates/model-explorer.html',
+								)
 								fs.readFile(templatePath, 'utf8', (templateErr, template) => {
 									if (templateErr) {
-										console.error('Error loading Model Explorer template:', templateErr)
-										res.status(500).send('Failed to load Model Explorer template')
+										console.error(
+											'Error loading Model Explorer template:',
+											templateErr,
+										)
+										res
+											.status(500)
+											.send('Failed to load Model Explorer template')
 										return
 									}
 
@@ -1411,9 +1517,14 @@ const createRequestHandler = (flags: Flags) => {
 									res.status(200).send(html)
 								})
 							})
-							.catch(conversionErr => {
+							.catch((conversionErr) => {
 								console.error('Error converting ONNX to graph:', conversionErr)
-								res.status(500).send('Failed to convert ONNX to graph format: ' + (conversionErr as Error).message)
+								res
+									.status(500)
+									.send(
+										'Failed to convert ONNX to graph format: ' +
+											(conversionErr as Error).message,
+									)
 							})
 					})
 				}
@@ -1425,7 +1536,7 @@ const createRequestHandler = (flags: Flags) => {
 		if (req.url === '/api/convert-mlir' && req.method === 'POST') {
 			let body = ''
 
-			req.on('data', chunk => {
+			req.on('data', (chunk) => {
 				body += chunk.toString()
 			})
 
@@ -1440,10 +1551,12 @@ const createRequestHandler = (flags: Flags) => {
 					res.status(200).send(JSON.stringify(graphData))
 				} catch (error) {
 					console.error('MLIR conversion error:', error)
-					res.status(500).send(JSON.stringify({
-						error: 'Failed to convert MLIR to graph format',
-						message: (error as Error).message
-					}))
+					res.status(500).send(
+						JSON.stringify({
+							error: 'Failed to convert MLIR to graph format',
+							message: (error as Error).message,
+						}),
+					)
 				}
 			})
 			return
@@ -1462,7 +1575,7 @@ const createRequestHandler = (flags: Flags) => {
 		let filePath: string
 		if (decodedUrl.startsWith('/lib/')) {
 			// Remove the leading /lib/ and serve from the actual lib directory
-			const libResource = decodedUrl.substring(5)  // Remove '/lib/'
+			const libResource = decodedUrl.substring(5) // Remove '/lib/'
 			filePath = path.normalize(path.join(libPath, libResource))
 		} else {
 			// Don't use unescape as it's deprecated and doesn't handle special characters well
@@ -1477,66 +1590,76 @@ const createRequestHandler = (flags: Flags) => {
 
 		// Create request-specific handlers with the correct relative path
 		const implantHandlers: ImplantHandlers = {
-			devdoc: (_prop: string): Promise<string | false> => new Promise(resolve => {
-				// Return the relative path from the current location to the lib directory
-				// This ensures CSS paths work correctly in nested directories
-				resolve(relativePath)
-			}),
+			devdoc: (_prop: string): Promise<string | false> =>
+				new Promise((resolve) => {
+					// Return the relative path from the current location to the lib directory
+					// This ensures CSS paths work correctly in nested directories
+					resolve(relativePath)
+				}),
 
-			file: (url: string, opts?: ImplantOptions): Promise<string | false> => new Promise(resolve => {
-				const absUrl = path.join(opts?.baseDir || '', url)
-				getFile(absUrl)
-					.then(data => {
-						msg('implant', style.link(absUrl), flags)
-						resolve(data)
-					})
-					.catch((_error: Error) => {
-						warnmsg('implant 404', style.link(absUrl), flags)
-						resolve(false)
-					})
-			}),
+			file: (url: string, opts?: ImplantOptions): Promise<string | false> =>
+				new Promise((resolve) => {
+					const absUrl = path.join(opts?.baseDir || '', url)
+					getFile(absUrl)
+						.then((data) => {
+							msg('implant', style.link(absUrl), flags)
+							resolve(data)
+						})
+						.catch((_error: Error) => {
+							warnmsg('implant 404', style.link(absUrl), flags)
+							resolve(false)
+						})
+				}),
 
-			less: (url: string, opts?: ImplantOptions): Promise<string | false> => new Promise(resolve => {
-				const absUrl = path.join(opts?.baseDir || '', url)
-				buildLessStyleSheet(absUrl)
-					.then(data => {
-						msg('implant', style.link(absUrl), flags)
-						resolve(data)
-					})
-					.catch((_error: Error) => {
-						warnmsg('implant 404', style.link(absUrl), flags)
-						resolve(false)
-					})
-			}),
+			less: (url: string, opts?: ImplantOptions): Promise<string | false> =>
+				new Promise((resolve) => {
+					const absUrl = path.join(opts?.baseDir || '', url)
+					buildLessStyleSheet(absUrl)
+						.then((data) => {
+							msg('implant', style.link(absUrl), flags)
+							resolve(data)
+						})
+						.catch((_error: Error) => {
+							warnmsg('implant 404', style.link(absUrl), flags)
+							resolve(false)
+						})
+				}),
 
-			markdown: (url: string, opts?: ImplantOptions): Promise<string | false> => new Promise(resolve => {
-				const absUrl = path.join(opts?.baseDir || '', url)
-				getFile(absUrl).then(markdownToHTML)
-					.then(data => {
-						msg('implant', style.link(absUrl), flags)
-						resolve(data)
-					})
-					.catch((_error: Error) => {
-						warnmsg('implant 404', style.link(absUrl), flags)
-						resolve(false)
-					})
-			}),
+			markdown: (url: string, opts?: ImplantOptions): Promise<string | false> =>
+				new Promise((resolve) => {
+					const absUrl = path.join(opts?.baseDir || '', url)
+					getFile(absUrl)
+						.then(markdownToHTML)
+						.then((data) => {
+							msg('implant', style.link(absUrl), flags)
+							resolve(data)
+						})
+						.catch((_error: Error) => {
+							warnmsg('implant 404', style.link(absUrl), flags)
+							resolve(false)
+						})
+				}),
 
-			html: (url: string, opts?: ImplantOptions): Promise<string | false> => new Promise(resolve => {
-				const absUrl = path.join(opts?.baseDir || '', url)
-				getFile(absUrl)
-					.then(data => {
-						msg('implant', style.link(absUrl), flags)
-						resolve(data)
-					})
-					.catch((_error: Error) => {
-						warnmsg('implant 404', style.link(absUrl), flags)
-						resolve(false)
-					})
-			})
+			html: (url: string, opts?: ImplantOptions): Promise<string | false> =>
+				new Promise((resolve) => {
+					const absUrl = path.join(opts?.baseDir || '', url)
+					getFile(absUrl)
+						.then((data) => {
+							msg('implant', style.link(absUrl), flags)
+							resolve(data)
+						})
+						.catch((_error: Error) => {
+							warnmsg('implant 404', style.link(absUrl), flags)
+							resolve(false)
+						})
+				}),
 		}
 
-		const errorPage = (code: number, filePath: string, err: Error): Promise<void> => {
+		const errorPage = (
+			code: number,
+			filePath: string,
+			err: Error,
+		): Promise<void> => {
 			errormsg(String(code), filePath, flags, err)
 
 			const templateUrl = path.join(libPath, 'templates/error.html')
@@ -1544,9 +1667,11 @@ const createRequestHandler = (flags: Flags) => {
 			// Use decodeURIComponent instead of deprecated unescape
 			// Ensure the fallback referer (parent directory) always has a trailing slash
 			const parentPath = path.parse(decodedUrl).dir
-			const referer = req.headers.referer ?
-				decodeURIComponent(req.headers.referer) :
-				(parentPath === '' || parentPath === '/' ? '/' : parentPath + '/')
+			const referer = req.headers.referer
+				? decodeURIComponent(req.headers.referer)
+				: parentPath === '' || parentPath === '/'
+					? '/'
+					: parentPath + '/'
 			const errorMsg = md.utils.escapeHtml(err.message)
 			const errorStack = md.utils.escapeHtml(String(err.stack))
 
@@ -1557,12 +1682,12 @@ const createRequestHandler = (flags: Flags) => {
 				filePath,
 				errorMsg,
 				errorStack,
-				referer
+				referer,
 			}
 
-			return baseTemplate(templateUrl, handlebarData).then(final => {
+			return baseTemplate(templateUrl, handlebarData).then((final) => {
 				res.writeHead(200, {
-					'content-type': 'text/html; charset=utf-8'
+					'content-type': 'text/html; charset=utf-8',
 				})
 				res.end(final)
 			})
@@ -1592,7 +1717,11 @@ const createRequestHandler = (flags: Flags) => {
 		// Serve Model Explorer static files
 		if (decodedUrl.startsWith('/lib/model-explorer/')) {
 			const modelExplorerFile = decodedUrl.substring(20) // Remove '/lib/model-explorer/' prefix
-			const modelExplorerPath = path.join(libPath, 'model-explorer', modelExplorerFile)
+			const modelExplorerPath = path.join(
+				libPath,
+				'model-explorer',
+				modelExplorerFile,
+			)
 
 			if (flags.verbose) {
 				msg('model-explorer', style.link(modelExplorerPath), flags)
@@ -1601,7 +1730,9 @@ const createRequestHandler = (flags: Flags) => {
 			// Check if file exists
 			if (!fs.existsSync(modelExplorerPath)) {
 				console.error('Model Explorer file not found:', modelExplorerPath)
-				res.status(404).send('Model Explorer file not found: ' + modelExplorerFile)
+				res
+					.status(404)
+					.send('Model Explorer file not found: ' + modelExplorerFile)
 				return
 			}
 
@@ -1627,25 +1758,27 @@ const createRequestHandler = (flags: Flags) => {
 			return
 		}
 
-		// API route for direct file downloads (e.g., /api/demo.js downloads demo.js)
-		if (decodedUrl.startsWith('/api/')) {
-			const apiPath = decodedUrl.substring(5) // Remove '/api/' prefix
-			const apiFilePath = path.normalize(path.join(dir, getPathFromUrl(decodeURIComponent(apiPath))))
+		// Raw file route for direct file downloads (e.g., /raw/demo.js downloads demo.js)
+		if (decodedUrl.startsWith('/raw/')) {
+			const apiPath = decodedUrl.substring(5) // Remove '/raw/' prefix
+			const apiFilePath = path.normalize(
+				path.join(dir, getPathFromUrl(decodeURIComponent(apiPath))),
+			)
 
 			if (flags.verbose) {
-				msg('api', style.link(apiFilePath), flags)
+				msg('raw', style.link(apiFilePath), flags)
 			}
 
 			try {
 				const stat = fs.statSync(apiFilePath)
 
 				if (stat.isDirectory()) {
-					res.status(400).send('API route does not support directories')
+					res.status(400).send('Raw file route does not support directories')
 					return
 				}
 
-				// Log the API download visit
-				logPageVisit(req, apiFilePath, 'api')
+				// Log the raw file download visit
+				logPageVisit(req, apiFilePath, 'raw')
 
 				const mimeType = mime.lookup(apiFilePath)
 				const fileName = path.basename(apiFilePath)
@@ -1653,18 +1786,21 @@ const createRequestHandler = (flags: Flags) => {
 				// Set headers for direct download
 				res.setHeader('Content-Type', mimeType || 'application/octet-stream')
 				res.setHeader('Content-Length', stat.size)
-				res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
+				res.setHeader(
+					'Content-Disposition',
+					`attachment; filename="${fileName}"`,
+				)
 
 				// Stream the file
 				const stream = fs.createReadStream(apiFilePath)
 				stream.on('error', (err) => {
-					errormsg('api error', apiFilePath, flags, err as Error)
+					errormsg('raw file error', apiFilePath, flags, err as Error)
 					res.status(500).end()
 				})
 				stream.pipe(res)
 				return
 			} catch (error) {
-				errormsg('api 404', apiFilePath, flags, error as Error)
+				errormsg('raw file 404', apiFilePath, flags, error as Error)
 				res.status(404).send('File not found')
 				return
 			}
@@ -1696,7 +1832,7 @@ const createRequestHandler = (flags: Flags) => {
 		} catch (error) {
 			const fileName = path.parse(filePath).base
 			if (fileName === 'favicon.ico') {
-				res.writeHead(200, {'Content-Type': 'image/x-icon'})
+				res.writeHead(200, { 'Content-Type': 'image/x-icon' })
 				res.write(faviconData)
 				res.end()
 				return
@@ -1729,8 +1865,69 @@ const createRequestHandler = (flags: Flags) => {
 		if (isMarkdown) {
 			msg('markdown', style.link(prettyPath), flags)
 			logPageVisit(req, filePath, 'markdown')
-			getFile(filePath).then(markdownToHTML).then((html: string) => {
-				return processTemplate(html, implantHandlers).then(output => {
+			getFile(filePath)
+				.then(markdownToHTML)
+				.then((html: string) => {
+					return processTemplate(html, implantHandlers).then((output) => {
+						const templateUrl = path.join(libPath, 'templates/markdown.html')
+
+						const stats = fs.statSync(filePath)
+						const lastModified = stats.mtime.toLocaleString('en-US', {
+							year: 'numeric',
+							month: 'short',
+							day: 'numeric',
+							hour: '2-digit',
+							minute: '2-digit',
+						})
+
+						const handlebarData: HandlebarData = {
+							title: path.parse(filePath).base,
+							content: output,
+							pid: process.pid || 'N/A',
+							filePath: prettyPath,
+							fileName: path.basename(filePath),
+							lastModified,
+							parentDir:
+								path.dirname(prettyPath) === '/'
+									? '/'
+									: path.dirname(prettyPath) + '/',
+						}
+
+						return baseTemplate(templateUrl, handlebarData).then((final) => {
+							return processTemplate(final, implantHandlers).then((output) => {
+								res.writeHead(200, {
+									'content-type': 'text/html',
+								})
+								res.end(output)
+							})
+						})
+					})
+				})
+				.catch((error: Error) => {
+					console.error(error)
+				})
+		} else if (isHtml) {
+			msg('html', style.link(prettyPath), flags)
+			logPageVisit(req, filePath, 'html')
+			getFile(filePath)
+				.then((html) => {
+					return processTemplate(html, implantHandlers).then((output) => {
+						res.writeHead(200, {
+							'content-type': 'text/html',
+						})
+						res.end(output)
+					})
+				})
+				.catch((error: Error) => {
+					console.error(error)
+				})
+		} else if (isDiff) {
+			// Diff: Browser is requesting a diff or patch file
+			msg('diff', style.link(prettyPath), flags)
+			logPageVisit(req, filePath, 'diff')
+			getFile(filePath)
+				.then((diffContent) => {
+					const htmlContent = textToHTML(diffContent, filePath)
 					const templateUrl = path.join(libPath, 'templates/markdown.html')
 
 					const stats = fs.statSync(filePath)
@@ -1739,130 +1936,78 @@ const createRequestHandler = (flags: Flags) => {
 						month: 'short',
 						day: 'numeric',
 						hour: '2-digit',
-						minute: '2-digit'
+						minute: '2-digit',
 					})
 
 					const handlebarData: HandlebarData = {
 						title: path.parse(filePath).base,
-						content: output,
+						content: htmlContent,
 						pid: process.pid || 'N/A',
 						filePath: prettyPath,
 						fileName: path.basename(filePath),
 						lastModified,
-						parentDir: path.dirname(prettyPath) === '/' ? '/' : path.dirname(prettyPath) + '/'
+						parentDir: path.dirname(prettyPath) || '/',
 					}
 
-					return baseTemplate(templateUrl, handlebarData).then(final => {
-						return processTemplate(final, implantHandlers)
-							.then(output => {
-								res.writeHead(200, {
-									'content-type': 'text/html'
-								})
-								res.end(output)
-							})
-					})
-				})
-			}).catch((error: Error) => {
-				console.error(error)
-			})
-		} else if (isHtml) {
-			msg('html', style.link(prettyPath), flags)
-			logPageVisit(req, filePath, 'html')
-			getFile(filePath).then(html => {
-				return processTemplate(html, implantHandlers).then(output => {
-					res.writeHead(200, {
-						'content-type': 'text/html'
-					})
-					res.end(output)
-				})
-			}).catch((error: Error) => {
-				console.error(error)
-			})
-		} else if (isDiff) {
-			// Diff: Browser is requesting a diff or patch file
-			msg('diff', style.link(prettyPath), flags)
-			logPageVisit(req, filePath, 'diff')
-			getFile(filePath).then(diffContent => {
-				const htmlContent = textToHTML(diffContent, filePath)
-				const templateUrl = path.join(libPath, 'templates/markdown.html')
-
-				const stats = fs.statSync(filePath)
-				const lastModified = stats.mtime.toLocaleString('en-US', {
-					year: 'numeric',
-					month: 'short',
-					day: 'numeric',
-					hour: '2-digit',
-					minute: '2-digit'
-				})
-
-				const handlebarData: HandlebarData = {
-					title: path.parse(filePath).base,
-					content: htmlContent,
-					pid: process.pid || 'N/A',
-					filePath: prettyPath,
-					fileName: path.basename(filePath),
-					lastModified,
-					parentDir: path.dirname(prettyPath) || '/'
-				}
-
-				return baseTemplate(templateUrl, handlebarData).then(final => {
-					return processTemplate(final, implantHandlers)
-						.then(output => {
+					return baseTemplate(templateUrl, handlebarData).then((final) => {
+						return processTemplate(final, implantHandlers).then((output) => {
 							res.writeHead(200, {
-								'content-type': 'text/html'
+								'content-type': 'text/html',
 							})
 							res.end(output)
 						})
+					})
 				})
-			}).catch((error: Error) => {
-				errorPage(500, filePath, error)
-			})
+				.catch((error: Error) => {
+					errorPage(500, filePath, error)
+				})
 		} else if (isMLIR) {
 			// MLIR: Browser is requesting an MLIR file
 			msg('mlir', style.link(prettyPath), flags)
 			logPageVisit(req, filePath, 'mlir')
-			getFile(filePath).then(mlirContent => {
-				const htmlContent = mlirToHTML(mlirContent)
-				const templateUrl = path.join(libPath, 'templates/markdown.html')
+			getFile(filePath)
+				.then((mlirContent) => {
+					const htmlContent = mlirToHTML(mlirContent)
+					const templateUrl = path.join(libPath, 'templates/markdown.html')
 
-				const stats = fs.statSync(filePath)
-				const lastModified = stats.mtime.toLocaleString('en-US', {
-					year: 'numeric',
-					month: 'short',
-					day: 'numeric',
-					hour: '2-digit',
-					minute: '2-digit'
-				})
+					const stats = fs.statSync(filePath)
+					const lastModified = stats.mtime.toLocaleString('en-US', {
+						year: 'numeric',
+						month: 'short',
+						day: 'numeric',
+						hour: '2-digit',
+						minute: '2-digit',
+					})
 
-				const handlebarData: HandlebarData = {
-					title: path.parse(filePath).base,
-					content: htmlContent,
-					pid: process.pid || 'N/A',
-					filePath: prettyPath,
-					fileName: path.basename(filePath),
-					lastModified,
-					parentDir: path.dirname(prettyPath) || '/'
-				}
+					const handlebarData: HandlebarData = {
+						title: path.parse(filePath).base,
+						content: htmlContent,
+						pid: process.pid || 'N/A',
+						filePath: prettyPath,
+						fileName: path.basename(filePath),
+						lastModified,
+						parentDir: path.dirname(prettyPath) || '/',
+					}
 
-				return baseTemplate(templateUrl, handlebarData).then(final => {
-					return processTemplate(final, implantHandlers)
-						.then(output => {
+					return baseTemplate(templateUrl, handlebarData).then((final) => {
+						return processTemplate(final, implantHandlers).then((output) => {
 							res.writeHead(200, {
-								'content-type': 'text/html'
+								'content-type': 'text/html',
 							})
 							res.end(output)
 						})
+					})
 				})
-			}).catch((error: Error) => {
-				errorPage(500, filePath, error)
-			})
+				.catch((error: Error) => {
+					errorPage(500, filePath, error)
+				})
 		} else if (isDir) {
 			// Redirect to URL with trailing slash if accessing directory without one
 			// This ensures relative links work correctly
 			if (!decodedUrl.endsWith('/')) {
 				// Properly encode URL path for Location header to handle Chinese/Unicode characters
 				const redirectUrl = encodeUrlPath(decodedUrl) + '/'
-				res.writeHead(301, { 'Location': redirectUrl })
+				res.writeHead(301, { Location: redirectUrl })
 				res.end()
 				return
 			}
@@ -1880,8 +2025,13 @@ const createRequestHandler = (flags: Flags) => {
 					}
 
 					// Find the file and relativePath from the parsed fields
-					const fileField = (req as any).files && (req as any).files.find((f: any) => f.fieldname === 'file')
-					const relativePath = (req as any).body && (req as any).body.relativePath ? (req as any).body.relativePath : ''
+					const fileField =
+						(req as any).files &&
+						(req as any).files.find((f: any) => f.fieldname === 'file')
+					const relativePath =
+						(req as any).body && (req as any).body.relativePath
+							? (req as any).body.relativePath
+							: ''
 
 					if (!fileField) {
 						res.status(400).send('No file uploaded')
@@ -1922,7 +2072,11 @@ const createRequestHandler = (flags: Flags) => {
 					} catch (accessErr) {
 						console.error('No write permission for directory:', filePath)
 						console.error('Error:', accessErr)
-						res.status(403).send('Permission denied: Cannot write to this directory. Please check directory permissions.')
+						res
+							.status(403)
+							.send(
+								'Permission denied: Cannot write to this directory. Please check directory permissions.',
+							)
 						return
 					}
 
@@ -1941,25 +2095,35 @@ const createRequestHandler = (flags: Flags) => {
 						targetPath = path.join(targetDir, originalFilename)
 
 						// Write the file
-						fs.writeFile(targetPath, fileField.buffer, function(writeErr) {
+						fs.writeFile(targetPath, fileField.buffer, function (writeErr) {
 							if (writeErr) {
 								console.error('File write error:', writeErr)
 								console.error('Target path was:', targetPath)
 
 								// Provide more specific error message for permission errors
 								if ((writeErr as NodeJS.ErrnoException).code === 'EACCES') {
-									res.status(403).send('Permission denied: Cannot write file. Please check directory permissions.')
+									res
+										.status(403)
+										.send(
+											'Permission denied: Cannot write file. Please check directory permissions.',
+										)
 								} else {
-									res.status(500).send('Failed to save file: ' + writeErr.message)
+									res
+										.status(500)
+										.send('Failed to save file: ' + writeErr.message)
 								}
 								return
 							}
 
-							const displayPath = relativePath ?
-								`${relativePath}/${originalFilename}` :
-								originalFilename
+							const displayPath = relativePath
+								? `${relativePath}/${originalFilename}`
+								: originalFilename
 
-							msg('upload', `${displayPath} -> ${style.link(prettyPath)}`, flags)
+							msg(
+								'upload',
+								`${displayPath} -> ${style.link(prettyPath)}`,
+								flags,
+							)
 							res.status(200).send('File uploaded successfully')
 						})
 					} catch (mkdirError) {
@@ -1968,9 +2132,18 @@ const createRequestHandler = (flags: Flags) => {
 
 						// Provide more specific error message for permission errors
 						if ((mkdirError as NodeJS.ErrnoException).code === 'EACCES') {
-							res.status(403).send('Permission denied: Cannot create directory. Please check parent directory permissions.')
+							res
+								.status(403)
+								.send(
+									'Permission denied: Cannot create directory. Please check parent directory permissions.',
+								)
 						} else {
-							res.status(500).send('Failed to create directory: ' + (mkdirError as Error).message)
+							res
+								.status(500)
+								.send(
+									'Failed to create directory: ' +
+										(mkdirError as Error).message,
+								)
 						}
 						return
 					}
@@ -2005,21 +2178,25 @@ const createRequestHandler = (flags: Flags) => {
 					title: path.parse(filePath).base,
 					pid: process.pid || 'N/A',
 					breadcrumbs: createBreadcrumbs(path.relative(dir, filePath)),
-					countsText
+					countsText,
 				}
 
-				baseTemplate(templateUrl, handlebarData).then(final => {
-					return processTemplate(final, implantHandlers).then(output => {
-						res.writeHead(200, {
-							'content-type': 'text/html'
-						})
-						res.end(output)
-					}).catch((_error: Error) => {
+				baseTemplate(templateUrl, handlebarData)
+					.then((final) => {
+						return processTemplate(final, implantHandlers)
+							.then((output) => {
+								res.writeHead(200, {
+									'content-type': 'text/html',
+								})
+								res.end(output)
+							})
+							.catch((_error: Error) => {
+								console.error(_error)
+							})
+					})
+					.catch((_error: Error) => {
 						console.error(_error)
 					})
-				}).catch((_error: Error) => {
-					console.error(_error)
-				})
 			} catch (error) {
 				errorPage(500, filePath, error as Error)
 			}
@@ -2027,57 +2204,13 @@ const createRequestHandler = (flags: Flags) => {
 			// Text: Browser is requesting a text file
 			msg('text', style.link(prettyPath), flags)
 			logPageVisit(req, filePath, 'text')
-			getFile(filePath).then(textContent => {
-				// Use logToHTML for .log files, textToHTML for others
-				const isLogFile = path.extname(filePath).toLowerCase() === '.log'
-				const htmlContent = isLogFile ? logToHTML(textContent) : textToHTML(textContent, filePath)
-				const templateUrl = path.join(libPath, 'templates/markdown.html')
-
-				const stats = fs.statSync(filePath)
-				const lastModified = stats.mtime.toLocaleString('en-US', {
-					year: 'numeric',
-					month: 'short',
-					day: 'numeric',
-					hour: '2-digit',
-					minute: '2-digit'
-				})
-
-				const handlebarData: HandlebarData = {
-					title: path.parse(filePath).base,
-					content: htmlContent,
-					pid: process.pid || 'N/A',
-					filePath: prettyPath,
-					fileName: path.basename(filePath),
-					lastModified,
-					parentDir: path.dirname(prettyPath) || '/'
-				}
-
-				return baseTemplate(templateUrl, handlebarData).then(final => {
-					return processTemplate(final, implantHandlers)
-						.then(output => {
-							res.writeHead(200, {
-								'content-type': 'text/html'
-							})
-							res.end(output)
-						})
-				})
-			}).catch((error: Error) => {
-				errorPage(500, filePath, error)
-			})
-		} else {
-			// Check if file has text MIME type and should be rendered as text
-			const mimeType = mime.contentType(path.extname(filePath))
-			const isTextMime = mimeType && (mimeType.startsWith('text/') ||
-				mimeType.includes('application/json') ||
-				mimeType.includes('application/xml') ||
-				mimeType.includes('application/javascript') ||
-				mimeType.includes('application/x-sh'))
-
-			if (isTextMime && req.headers.accept && req.headers.accept.includes('text/html')) {
-				// Render any text MIME type file as formatted text
-				msg('text (mime)', style.link(prettyPath), flags)
-				getFile(filePath).then(textContent => {
-					const htmlContent = textToHTML(textContent, filePath)
+			getFile(filePath)
+				.then((textContent) => {
+					// Use logToHTML for .log files, textToHTML for others
+					const isLogFile = path.extname(filePath).toLowerCase() === '.log'
+					const htmlContent = isLogFile
+						? logToHTML(textContent)
+						: textToHTML(textContent, filePath)
 					const templateUrl = path.join(libPath, 'templates/markdown.html')
 
 					const stats = fs.statSync(filePath)
@@ -2086,7 +2219,7 @@ const createRequestHandler = (flags: Flags) => {
 						month: 'short',
 						day: 'numeric',
 						hour: '2-digit',
-						minute: '2-digit'
+						minute: '2-digit',
 					})
 
 					const handlebarData: HandlebarData = {
@@ -2095,21 +2228,75 @@ const createRequestHandler = (flags: Flags) => {
 						pid: process.pid || 'N/A',
 						filePath: prettyPath,
 						fileName: path.basename(filePath),
-						lastModified
+						lastModified,
+						parentDir: path.dirname(prettyPath) || '/',
 					}
 
-					return baseTemplate(templateUrl, handlebarData).then(final => {
-						return processTemplate(final, implantHandlers)
-							.then(output => {
+					return baseTemplate(templateUrl, handlebarData).then((final) => {
+						return processTemplate(final, implantHandlers).then((output) => {
+							res.writeHead(200, {
+								'content-type': 'text/html',
+							})
+							res.end(output)
+						})
+					})
+				})
+				.catch((error: Error) => {
+					errorPage(500, filePath, error)
+				})
+		} else {
+			// Check if file has text MIME type and should be rendered as text
+			const mimeType = mime.contentType(path.extname(filePath))
+			const isTextMime =
+				mimeType &&
+				(mimeType.startsWith('text/') ||
+					mimeType.includes('application/json') ||
+					mimeType.includes('application/xml') ||
+					mimeType.includes('application/javascript') ||
+					mimeType.includes('application/x-sh'))
+
+			if (
+				isTextMime &&
+				req.headers.accept &&
+				req.headers.accept.includes('text/html')
+			) {
+				// Render any text MIME type file as formatted text
+				msg('text (mime)', style.link(prettyPath), flags)
+				getFile(filePath)
+					.then((textContent) => {
+						const htmlContent = textToHTML(textContent, filePath)
+						const templateUrl = path.join(libPath, 'templates/markdown.html')
+
+						const stats = fs.statSync(filePath)
+						const lastModified = stats.mtime.toLocaleString('en-US', {
+							year: 'numeric',
+							month: 'short',
+							day: 'numeric',
+							hour: '2-digit',
+							minute: '2-digit',
+						})
+
+						const handlebarData: HandlebarData = {
+							title: path.parse(filePath).base,
+							content: htmlContent,
+							pid: process.pid || 'N/A',
+							filePath: prettyPath,
+							fileName: path.basename(filePath),
+							lastModified,
+						}
+
+						return baseTemplate(templateUrl, handlebarData).then((final) => {
+							return processTemplate(final, implantHandlers).then((output) => {
 								res.writeHead(200, {
-									'content-type': 'text/html'
+									'content-type': 'text/html',
 								})
 								res.end(output)
 							})
+						})
 					})
-				}).catch((error: Error) => {
-					errorPage(500, filePath, error)
-				})
+					.catch((error: Error) => {
+						errorPage(500, filePath, error)
+					})
 				return
 			}
 
@@ -2118,10 +2305,18 @@ const createRequestHandler = (flags: Flags) => {
 			logPageVisit(req, filePath, 'file')
 
 			// Check if we should show a download page or serve directly
-			const isDownloadable = !mimeType || !mimeType.startsWith('image/') && !mimeType.startsWith('video/') && !mimeType.startsWith('audio/')
+			const isDownloadable =
+				!mimeType ||
+				(!mimeType.startsWith('image/') &&
+					!mimeType.startsWith('video/') &&
+					!mimeType.startsWith('audio/'))
 
 			// For non-media files, show a download page
-			if (isDownloadable && req.headers.accept && req.headers.accept.includes('text/html')) {
+			if (
+				isDownloadable &&
+				req.headers.accept &&
+				req.headers.accept.includes('text/html')
+			) {
 				const fileName = path.basename(filePath)
 				const stats = fs.statSync(filePath)
 				const fileSize = stats.size
@@ -2131,7 +2326,7 @@ const createRequestHandler = (flags: Flags) => {
 					month: 'short',
 					day: 'numeric',
 					hour: '2-digit',
-					minute: '2-digit'
+					minute: '2-digit',
 				})
 
 				// Check if this is an ONNX file to add visualization button
@@ -2205,7 +2400,10 @@ const createRequestHandler = (flags: Flags) => {
 				}
 				// Add download header if requested
 				if (req.url.includes('download=true')) {
-					res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filePath)}"`)
+					res.setHeader(
+						'Content-Disposition',
+						`attachment; filename="${path.basename(filePath)}"`,
+					)
 				}
 				const stream = fs.createReadStream(filePath)
 				stream.on('error', () => {
@@ -2217,7 +2415,11 @@ const createRequestHandler = (flags: Flags) => {
 	}
 }
 
-const startExpressApp = (liveReloadPort: number | 'false', httpRequestHandler: (req: Request, res: Response) => void, watchEnabled: boolean): Application => {
+const startExpressApp = (
+	liveReloadPort: number | 'false',
+	httpRequestHandler: (req: Request, res: Response) => void,
+	watchEnabled: boolean,
+): Application => {
 	const app = express()
 	app.use(compression())
 	if (liveReloadPort && liveReloadPort !== 'false' && watchEnabled) {
@@ -2234,7 +2436,10 @@ const startExpressApp = (liveReloadPort: number | 'false', httpRequestHandler: (
 }
 
 // Helper function to check if a port is available
-const checkPortAvailable = (port: number, address: string): Promise<boolean> => {
+const checkPortAvailable = (
+	port: number,
+	address: string,
+): Promise<boolean> => {
 	return new Promise((resolve) => {
 		const tester = http.createServer()
 		tester.once('error', (err: NodeJS.ErrnoException) => {
@@ -2252,7 +2457,11 @@ const checkPortAvailable = (port: number, address: string): Promise<boolean> => 
 }
 
 // Helper function to find an available port
-const findAvailablePort = async (startPort: number, address: string, maxAttempts: number = 10): Promise<number> => {
+const findAvailablePort = async (
+	startPort: number,
+	address: string,
+	maxAttempts: number = 10,
+): Promise<number> => {
 	for (let i = 0; i < maxAttempts; i++) {
 		const port = startPort + i
 		const available = await checkPortAvailable(port, address)
@@ -2260,10 +2469,16 @@ const findAvailablePort = async (startPort: number, address: string, maxAttempts
 			return port
 		}
 	}
-	throw new Error(`Could not find available port after ${maxAttempts} attempts starting from ${startPort}`)
+	throw new Error(
+		`Could not find available port after ${maxAttempts} attempts starting from ${startPort}`,
+	)
 }
 
-const startHTTPServer = async (expressApp: Application | null, port: number | string, flags: Flags): Promise<HttpServerResult> => {
+const startHTTPServer = async (
+	expressApp: Application | null,
+	port: number | string,
+	flags: Flags,
+): Promise<HttpServerResult> => {
 	let httpServer: HttpServer
 
 	if (expressApp) {
@@ -2278,7 +2493,13 @@ const startHTTPServer = async (expressApp: Application | null, port: number | st
 	return new Promise((resolve, reject) => {
 		httpServer.once('error', async (err: NodeJS.ErrnoException) => {
 			if (err.code === 'EADDRINUSE') {
-				msg('port', chalk.yellow(`Port ${portNum} is already in use, finding an available port...`), flags)
+				msg(
+					'port',
+					chalk.yellow(
+						`Port ${portNum} is already in use, finding an available port...`,
+					),
+					flags,
+				)
 				try {
 					const newPort = await findAvailablePort(portNum + 1, flags.address)
 					msg('port', chalk.green(`Using port ${newPort} instead`), flags)
@@ -2295,7 +2516,8 @@ const startHTTPServer = async (expressApp: Application | null, port: number | st
 
 		httpServer.once('listening', () => {
 			const address = httpServer.address()
-			const actualPort = typeof address === 'object' && address !== null ? address.port : portNum
+			const actualPort =
+				typeof address === 'object' && address !== null ? address.port : portNum
 			resolve({ server: httpServer, port: actualPort })
 		})
 
@@ -2309,8 +2531,11 @@ interface LiveReloadResult {
 	port: number
 }
 
-const startLiveReloadServer = async (liveReloadPort: number, flags: Flags): Promise<LiveReloadResult> => {
-	let {dir} = flags
+const startLiveReloadServer = async (
+	liveReloadPort: number,
+	flags: Flags,
+): Promise<LiveReloadResult> => {
+	let { dir } = flags
 	const isDir = fs.statSync(dir).isDirectory()
 	if (!isDir) {
 		dir = path.parse(flags.dir).dir
@@ -2326,12 +2551,27 @@ const startLiveReloadServer = async (liveReloadPort: number, flags: Flags): Prom
 	const portAvailable = await checkPortAvailable(liveReloadPort, '::')
 
 	if (!portAvailable) {
-		msg('livereload', chalk.yellow(`LiveReload port ${liveReloadPort} is already in use, finding an available port...`), flags)
+		msg(
+			'livereload',
+			chalk.yellow(
+				`LiveReload port ${liveReloadPort} is already in use, finding an available port...`,
+			),
+			flags,
+		)
 		try {
 			actualPort = await findAvailablePort(liveReloadPort + 1, '::', 10)
-			msg('livereload', chalk.green(`Using LiveReload port ${actualPort} instead`), flags)
+			msg(
+				'livereload',
+				chalk.green(`Using LiveReload port ${actualPort} instead`),
+				flags,
+			)
 		} catch (findErr) {
-			errormsg('livereload', `Could not find available port for LiveReload: ${(findErr as Error).message}`, flags, findErr as Error)
+			errormsg(
+				'livereload',
+				`Could not find available port for LiveReload: ${(findErr as Error).message}`,
+				flags,
+				findErr as Error,
+			)
 			// Return a dummy object so the server can still start without LiveReload
 			return { wss: null, watcher: null, port: 0 }
 		}
@@ -2342,7 +2582,12 @@ const startLiveReloadServer = async (liveReloadPort: number, flags: Flags): Prom
 
 	// Handle any runtime errors
 	wss.on('error', (err: Error) => {
-		errormsg('livereload', `LiveReload server error: ${err.message}`, flags, err)
+		errormsg(
+			'livereload',
+			`LiveReload server error: ${err.message}`,
+			flags,
+			err,
+		)
 	})
 
 	// Track connected clients
@@ -2361,15 +2606,15 @@ const startLiveReloadServer = async (liveReloadPort: number, flags: Flags): Prom
 			/(^|[\/\\])\../, // Hidden files
 			/node_modules/,
 			/__pycache__/,
-			/.git/
+			/.git/,
 		],
-		persistent: true
+		persistent: true,
 	})
 
 	watcher.on('change', (filepath: string) => {
 		msg('reload', filepath, flags)
 		// Send reload message to all connected clients
-		clients.forEach(ws => {
+		clients.forEach((ws) => {
 			if (ws.readyState === ws.OPEN) {
 				ws.send(JSON.stringify({ type: 'reload' }))
 			}
@@ -2379,28 +2624,48 @@ const startLiveReloadServer = async (liveReloadPort: number, flags: Flags): Prom
 	return { wss, watcher, port: actualPort }
 }
 
-const logActiveServerInfo = async (serveURL: string, _actualHttpPort: number, liveReloadPort: number, flags: Flags): Promise<void> => {
+const logActiveServerInfo = async (
+	serveURL: string,
+	_actualHttpPort: number,
+	liveReloadPort: number,
+	flags: Flags,
+): Promise<void> => {
 	const dir = path.resolve(flags.dir)
 
 	const githubLink = 'github.com/litanlitudan/devdoc'
 
 	msg('address', style.address(serveURL), flags)
 	msg('path', chalk.grey(style.address(dir)), flags)
-	msg('livereload', chalk.grey(`communicating on port: ${style.port(liveReloadPort)}`), flags)
+	msg(
+		'livereload',
+		chalk.grey(`communicating on port: ${style.port(liveReloadPort)}`),
+		flags,
+	)
 
 	if (process.pid) {
 		msg('process', chalk.grey(`your pid is: ${style.pid(process.pid)}`), flags)
-		msg('stop', chalk.grey(`press ${chalk.magenta('[Ctrl + C]')} or type ${chalk.magenta(`"sudo kill -9 ${process.pid}"`)}`), flags)
+		msg(
+			'stop',
+			chalk.grey(
+				`press ${chalk.magenta('[Ctrl + C]')} or type ${chalk.magenta(`"sudo kill -9 ${process.pid}"`)}`,
+			),
+			flags,
+		)
 	}
 
-	msg('github', `Contribute on Github - ${chalk.yellow.underline(githubLink)}`, flags)
+	msg(
+		'github',
+		`Contribute on Github - ${chalk.yellow.underline(githubLink)}`,
+		flags,
+	)
 }
 
-const checkForUpgrade = (): Promise<boolean> => new Promise((resolve) => {
-	// For now, skip upgrade check since analyze-deps is not available
-	// This can be replaced with a simpler npm API check
-	resolve(false)
-})
+const checkForUpgrade = (): Promise<boolean> =>
+	new Promise((resolve) => {
+		// For now, skip upgrade check since analyze-deps is not available
+		// This can be replaced with a simpler npm API check
+		resolve(false)
+	})
 
 const optionalUpgrade = async (flags: Flags): Promise<void> => {
 	if (flags.silent) {
@@ -2409,25 +2674,43 @@ const optionalUpgrade = async (flags: Flags): Promise<void> => {
 
 	msg('upgrade', 'checking for upgrade...', flags)
 
-	return checkForUpgrade().then(async version => {
-		if (version === false) {
-			msg('upgrade', 'no upgrade available', flags)
-			return
-		}
+	return checkForUpgrade()
+		.then(async (version) => {
+			if (version === false) {
+				msg('upgrade', 'no upgrade available', flags)
+				return
+			}
 
-		msg(chalk.bgRed('✨UPGRADE✨'), `Devdoc version: ${version} is available!`, flags)
+			msg(
+				chalk.bgRed('✨UPGRADE✨'),
+				`Devdoc version: ${version} is available!`,
+				flags,
+			)
 
-		const logInstallNotes = (): void => {
-			msg(chalk.bgRed('✨UPGRADE✨'), 'Upgrade cancelled. To upgrade manually:', flags)
-			msg(chalk.bgRed('✨UPGRADE✨'), chalk.bgYellow.black.bold(` npm i -g devdoc@${version} `), flags)
-			msg(chalk.bgRed('✨UPGRADE✨'), chalk.bgYellow.black.bold(` yarn global add devdoc@${version} `), flags)
-		}
+			const logInstallNotes = (): void => {
+				msg(
+					chalk.bgRed('✨UPGRADE✨'),
+					'Upgrade cancelled. To upgrade manually:',
+					flags,
+				)
+				msg(
+					chalk.bgRed('✨UPGRADE✨'),
+					chalk.bgYellow.black.bold(` npm i -g devdoc@${version} `),
+					flags,
+				)
+				msg(
+					chalk.bgRed('✨UPGRADE✨'),
+					chalk.bgYellow.black.bold(` yarn global add devdoc@${version} `),
+					flags,
+				)
+			}
 
-		// For now, just log the install notes since promptly is not available
-		logInstallNotes()
-	}).catch((error: Error) => {
-		console.error(error)
-	})
+			// For now, just log the install notes since promptly is not available
+			logInstallNotes()
+		})
+		.catch((error: Error) => {
+			console.error(error)
+		})
 }
 
 const init = async (flags: Flags): Promise<DevdocService> => {
@@ -2438,16 +2721,24 @@ const init = async (flags: Flags): Promise<DevdocService> => {
 	const httpRequestHandler = createRequestHandler(flags)
 
 	// First, determine the actual LiveReload port if needed
-	let actualLiveReloadPort: number = typeof liveReloadPort === 'number' ? liveReloadPort : 0
+	let actualLiveReloadPort: number =
+		typeof liveReloadPort === 'number' ? liveReloadPort : 0
 	let liveReloadServer: LiveReloadResult | undefined
 	if (liveReloadPort && liveReloadPort !== 'false' && watchEnabled) {
-		const lrResult = await startLiveReloadServer(typeof liveReloadPort === 'number' ? liveReloadPort : 35729, flags)
+		const lrResult = await startLiveReloadServer(
+			typeof liveReloadPort === 'number' ? liveReloadPort : 35729,
+			flags,
+		)
 		liveReloadServer = lrResult
 		actualLiveReloadPort = lrResult.port
 	}
 
 	// Create Express app with the actual LiveReload port
-	const expressApp = startExpressApp(actualLiveReloadPort, httpRequestHandler, watchEnabled)
+	const expressApp = startExpressApp(
+		actualLiveReloadPort,
+		httpRequestHandler,
+		watchEnabled,
+	)
 
 	// Start HTTP server with automatic port finding
 	const httpResult = await startHTTPServer(expressApp, httpPort, flags)
@@ -2466,14 +2757,32 @@ const init = async (flags: Flags): Promise<DevdocService> => {
 
 		msg('address', style.address(serveURL), flags)
 		msg('path', chalk.grey(style.address(dir)), flags)
-		msg('watch', chalk.grey('file watching disabled (use --watch to enable)'), flags)
+		msg(
+			'watch',
+			chalk.grey('file watching disabled (use --watch to enable)'),
+			flags,
+		)
 
 		if (process.pid) {
-			msg('process', chalk.grey(`your pid is: ${style.pid(process.pid)}`), flags)
-			msg('stop', chalk.grey(`press ${chalk.magenta('[Ctrl + C]')} or type ${chalk.magenta(`"sudo kill -9 ${process.pid}"`)}`), flags)
+			msg(
+				'process',
+				chalk.grey(`your pid is: ${style.pid(process.pid)}`),
+				flags,
+			)
+			msg(
+				'stop',
+				chalk.grey(
+					`press ${chalk.magenta('[Ctrl + C]')} or type ${chalk.magenta(`"sudo kill -9 ${process.pid}"`)}`,
+				),
+				flags,
+			)
 		}
 
-		msg('github', `Contribute on Github - ${chalk.yellow.underline(githubLink)}`, flags)
+		msg(
+			'github',
+			`Contribute on Github - ${chalk.yellow.underline(githubLink)}`,
+			flags,
+		)
 	}
 
 	let launchUrl: string | false = false
@@ -2492,12 +2801,11 @@ const init = async (flags: Flags): Promise<DevdocService> => {
 		httpServer,
 		liveReloadServer,
 		expressApp: httpServer, // Express app is embedded in the httpServer
-		launchUrl
+		launchUrl,
 	}
 
 	const launchBrowser = (): void => {
-		if (flags.browser === false ||
-			flags.browser === 'false') {
+		if (flags.browser === false || flags.browser === 'false') {
 			return
 		}
 
@@ -2508,7 +2816,7 @@ const init = async (flags: Flags): Promise<DevdocService> => {
 	}
 
 	// Only check for upgrades when online
-	isOnline({timeout: 5000}).then(() => {
+	isOnline({ timeout: 5000 }).then(() => {
 		optionalUpgrade(flags)
 	})
 	launchBrowser()
@@ -2534,5 +2842,5 @@ export default {
 	getFile,
 	markdownToHTML,
 	init,
-	createDevdocApp
+	createDevdocApp,
 }

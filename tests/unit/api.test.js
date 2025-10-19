@@ -26,13 +26,15 @@ const supertestAvailable = process.env.DEVDOC_ENABLE_SUPERTEST === '1'
 const describeIf = supertestAvailable ? describe : describe.skip
 const itIf = supertestAvailable ? it : it.skip
 
-describeIf('API route for direct downloads', () => {
-	itIf('should download files directly via /api/ route', async () => {
-		const response = await request(app).get('/api/package.json')
+describeIf('Raw file route for direct downloads', () => {
+	itIf('should download files directly via /raw/ route', async () => {
+		const response = await request(app).get('/raw/package.json')
 
 		expect(response.status).toBe(200)
 		expect(response.headers['content-type']).toMatch(/application\/json/)
-		expect(response.headers['content-disposition']).toBe('attachment; filename="package.json"')
+		expect(response.headers['content-disposition']).toBe(
+			'attachment; filename="package.json"',
+		)
 
 		const actualContent = fs.readFileSync(
 			path.join(__dirname, '..', '..', 'package.json'),
@@ -41,38 +43,41 @@ describeIf('API route for direct downloads', () => {
 		expect(response.text).toBe(actualContent)
 	})
 
-	itIf('should download JavaScript files via /api/ route', async () => {
-		const response = await request(app).get('/api/dist/cli.js')
+	itIf('should download JavaScript files via /raw/ route', async () => {
+		const response = await request(app).get('/raw/dist/lib/server.js')
 
 		expect(response.status).toBe(200)
 		expect(response.headers['content-type']).toMatch(/javascript/)
-		expect(response.headers['content-disposition']).toBe('attachment; filename="cli.js"')
+		expect(response.headers['content-disposition']).toBe(
+			'attachment; filename="server.js"',
+		)
 
 		expect(response.text.length).toBeGreaterThan(0)
-		expect(response.text).toContain('#!/usr/bin/env node')
 	})
 
-	itIf('should return 404 for non-existent files via /api/ route', async () => {
-		const response = await request(app).get('/api/nonexistent.js')
+	itIf('should return 404 for non-existent files via /raw/ route', async () => {
+		const response = await request(app).get('/raw/nonexistent.js')
 
 		expect(response.status).toBe(404)
 		expect(response.text).toBe('File not found')
 	})
 
-	itIf('should return 400 for directories via /api/ route', async () => {
-		const response = await request(app).get('/api/lib/')
+	itIf('should return 400 for directories via /raw/ route', async () => {
+		const response = await request(app).get('/raw/lib/')
 
 		expect(response.status).toBe(400)
-		expect(response.text).toBe('API route does not support directories')
+		expect(response.text).toBe('Raw file route does not support directories')
 	})
 
 	itIf('should work with curl-like user agents', async () => {
 		const response = await request(app)
-			.get('/api/package.json')
+			.get('/raw/package.json')
 			.set('User-Agent', 'curl/7.64.1')
 
 		expect(response.status).toBe(200)
-		expect(response.headers['content-disposition']).toBe('attachment; filename="package.json"')
+		expect(response.headers['content-disposition']).toBe(
+			'attachment; filename="package.json"',
+		)
 	})
 
 	itIf('should handle files with special characters in names', async () => {
@@ -81,7 +86,7 @@ describeIf('API route for direct downloads', () => {
 
 		try {
 			const response = await request(app).get(
-				'/api/tests/unit/test%20file%20with%20spaces.txt',
+				'/raw/tests/unit/test%20file%20with%20spaces.txt',
 			)
 
 			expect(response.status).toBe(200)
