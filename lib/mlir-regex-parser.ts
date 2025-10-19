@@ -28,12 +28,14 @@ interface MlirFunction {
 	operations: MlirOperation[]
 }
 
+// Supports both {attrs} and <{attrs}> syntax, multiple attribute blocks, and location annotations
 const QUOTED_WITH_RESULT =
-	/(%[\w]+(?:,\s*%[\w]+)*)\s*=\s*"([^"]+)"\s*\(([^)]*)\)\s*(?:\{([^}]*)\})?\s*:\s*(?:\([^)]+\)\s*->\s*)?(.+?)(?:\s|$)/gms
+	/(%[\w]+(?:,\s*%[\w]+)*)\s*=\s*"([^"]+)"\s*\(([^)]*)\)\s*((?:<?\{[^}]*\}>?\s*)*)\s*:\s*(?:\([^)]+\)\s*->\s*)?(.+?)(?:\s+loc\(|$)/gms
 const UNQUOTED_WITH_RESULT =
 	/(%[\w]+(?:,\s*%[\w]+)*)\s*=\s*([\w]+\.[\w]+)\s+(?!(?:\{[^}]+\}\s+)?ins\()([^{:]+?)\s*(?:\{([^}]*)\})?\s*:\s*(.+?)(?:\s|$)/gms
+// Supports both {attrs} and <{attrs}> syntax, multiple attribute blocks, and location annotations
 const QUOTED_NO_RESULT =
-	/^\s*"([\w]+\.[\w]+)"\s*\(([^)]*)\)\s*(?:\{([^}]*)\})?\s*(?::\s*(.+?))?(?:\s|$)/gm
+	/^\s*"([\w]+\.[\w]+)"\s*\(([^)]*)\)\s*((?:<?\{[^}]*\}>?\s*)*)\s*(?::\s*(.+?))?(?:\s+loc\(|$)/gm
 const UNQUOTED_NO_RESULT =
 	/^\s*([\w]+\.[\w]+)\s+([^{:\n]+?)\s*(?:\{([^}]*)\})?\s*(?::\s*(.+?))?(?:\s|$)/gm
 const NO_INPUT_PATTERN =
@@ -45,8 +47,10 @@ const CALL_WITH_RESULT_PATTERN =
 const INS_OUTS_PATTERN =
 	/(%[\w]+(?:,\s*%[\w]+)*)\s*=\s*([\w]+\.[\w]+)\s+(?:\{[^}]+\}\s+)?ins\(([^)]+)\)\s+outs\(([^)]+)\)\s*(?:->\s*(.+?))?(?:\s|$)/gms
 
-const FUNCTION_PATTERN = /(?:\w+\.func)\s+@(\w+)\s*\(([^)]*)\)[^{]*\{/gm
-const INPUT_PATTERN = /(%\w+)\s*:\s*([^,)]+)/g
+// Function pattern - we'll handle argument parsing separately to handle nested parens
+const FUNCTION_PATTERN = /(?:\w+\.func)\s+@(\w+)\s*\(/gm
+// Input pattern - stops at loc(...), comma, paren, or end to strip location annotations
+const INPUT_PATTERN = /(%\w+)\s*:\s*([^,)]+?)(?:\s+loc\(|,|\)|$)/g
 const RETURN_PATTERN = /func\.return\s+([^:]+)/m
 
 const ATTRIBUTE_PATTERN = /(\w+)\s*=\s*([^,}]+)/g
@@ -424,11 +428,39 @@ function parseFunctions(content: string): MlirFunction[] {
 
 	for (const match of content.matchAll(FUNCTION_PATTERN)) {
 		const funcName = match[1]
-		const inputsStr = match[2]
-		const bodyStart = match.index! + match[0].length
 
+		// Manually extract inputs by counting parentheses (handles nested loc(...))
+		const parenStart = match.index! + match[0].length - 1 // Position of opening (
+		let parenCount = 1
+		let pos = match.index! + match[0].length
+
+		while (pos < content.length && parenCount > 0) {
+			if (content[pos] === '(') parenCount += 1
+			else if (content[pos] === ')') parenCount -= 1
+			pos += 1
+		}
+
+		const inputsStr =
+			parenCount === 0 ? content.slice(parenStart + 1, pos - 1) : ''
+
+		// Find the function body start by looking for { before first operation
+		// This handles both "func @name() {" and "func @name() attributes {...} {"
+		const searchStart = pos
+		const remaining = content.slice(searchStart)
+
+		// Look for the pattern: possible attributes block(s) followed by {
+		const bodyStartMatch = remaining.match(/\{\s*(?=%|\s*func\.return|\s*$)/)
+		const bodyStartOffset = bodyStartMatch
+			? bodyStartMatch.index! + 1
+			: remaining.indexOf('{') + 1
+
+		if (bodyStartOffset === 0) continue // No function body found
+
+		const bodyStart = searchStart + bodyStartOffset
+
+		// Find the corresponding closing brace
 		let braceCount = 1
-		let pos = bodyStart
+		pos = bodyStart
 		let bodyEnd = content.length
 
 		while (pos < content.length && braceCount > 0) {
