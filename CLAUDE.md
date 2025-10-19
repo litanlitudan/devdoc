@@ -171,12 +171,12 @@ When creating test examples or sample files for new features (like MLIR support)
 **MLIR Support (Custom Addition):**
 
 - `.mlir` files are recognized as a distinct file type
-- Direct Python-based graph parsing using regex patterns
+- Direct TypeScript-based graph parsing using regex patterns
 - Converts MLIR text to Model Explorer graph format via `lib/mlir-to-graph.ts`
-- Executes `scripts/parse_mlir_regex.py` for MLIR parsing
+- Uses `lib/mlir-regex-parser.ts` as the built-in fallback when the native parser is unavailable
 - Displays tensor shapes in node labels (input/output dimensions)
 - Supports ALL MLIR dialects by treating operations as generic graph nodes
-- Requires Python 3.9+ (no external dependencies)
+- Requires no additional runtime dependencies beyond Node.js
 
 ### LiveReload Integration
 
@@ -247,12 +247,12 @@ When creating test examples or sample files for new features (like MLIR support)
 
 - Added MLIR to recognized file types in `fileTypes` object
 - Implemented direct Python-based MLIR parsing using regex patterns
-- Created `scripts/parse_mlir_regex.py` for MLIR graph conversion
+- Added TypeScript regex fallback (`lib/mlir-regex-parser.ts`) for MLIR graph conversion
 - Added tensor shape display in node labels (input/output shapes)
-- Modified `lib/mlir-to-graph.ts` to use direct Python parser
+- Modified `lib/mlir-to-graph.ts` to use native C++ parser with TypeScript fallback
 - Added MLIR files to watch list for live reload
 - Supports ALL MLIR dialects by treating operations as generic graph nodes
-- Requires Python 3.9+ only (no external dependencies)
+- Requires only Node.js runtime (TypeScript implementation)
 
 **Two-Tier MLIR Parser Architecture:**
 
@@ -271,7 +271,7 @@ Devdoc uses an intelligent two-tier parsing system with automatic fallback:
 - **Requires**: LLVM/MLIR, C++17 compiler, CMake, nlohmann/json
 - **Build**: See `src/mlir/BUILD.md`
 
-**2. Python Regex Parser (Fallback, Always Available)**
+**2. TypeScript Regex Parser (Fallback, Always Available)**
 
 - ✅ Lightweight, dependency-free parsing
 - ✅ Handles arbitrary MLIR dialects as generic operations
@@ -279,12 +279,13 @@ Devdoc uses an intelligent two-tier parsing system with automatic fallback:
 - ✅ Dense constant preprocessing
 - ✅ Extensibility hooks for dialect customization
 - ✅ Location-based naming support
-- **Location**: `scripts/parse_mlir_regex.py`
-- **Requires**: Python 3.9+ only (no build needed)
+- ✅ Deterministic dialect coloring & edge overlays
+- **Location**: `lib/mlir-regex-parser.ts`
+- **Requires**: None (ships with Devdoc)
 
 **Automatic Parser Selection:**
 
-The system uses `scripts/parse_mlir_cpp.py` to automatically select the best parser:
+`lib/mlir-to-graph.ts` automatically selects the best parser:
 
 ```
 Try C++ Parser → Success? → Return result
@@ -295,14 +296,14 @@ Fallback to Regex Parser → Return result
 You'll see one of these messages:
 
 ```bash
-✓ Used C++ MLIR context parser       # Best performance
-✓ Used regex-based parser (fallback) # No build required
+✓ C++ MLIR context parser successful       # Best performance
+ℹ️  C++ MLIR parser not found. Using TypeScript fallback.
 ```
 
 **Quick Setup:**
 
 ```bash
-# Option 1: Use regex parser (no setup needed)
+# Option 1: Use TypeScript parser (no setup needed)
 npm test  # Just works!
 
 # Option 2: Build C++ parser for 10-100x performance boost

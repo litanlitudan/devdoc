@@ -4,31 +4,17 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { execFileSync } from 'child_process'
 import path from 'node:path'
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { parseMlirWithRegex } from '../../lib/mlir-regex-parser.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Helper to parse MLIR using the Python parser (returns single graph from multi-graph format)
+// Helper to parse MLIR using the TypeScript regex parser (returns single graph from multi-graph format)
 function parseMLIR(mlirContent: string, filename: string = 'test-graph') {
-	const scriptPath = path.join(
-		__dirname,
-		'..',
-		'..',
-		'scripts',
-		'parse_mlir_regex.py',
-	)
-	const pythonCmd = process.env.CONDA_DEFAULT_ENV ? 'python' : 'python3'
-
-	const resultJson = execFileSync(pythonCmd, [scriptPath, filename], {
-		input: mlirContent,
-		encoding: 'utf-8',
-		maxBuffer: 10 * 1024 * 1024,
-	})
-
-	const result = JSON.parse(resultJson)
+	const result = parseMlirWithRegex(mlirContent, filename)
 	// Return the first graph for backward compatibility with tests
 	return result.graphs && result.graphs[0] ? result.graphs[0] : result
 }
@@ -198,7 +184,6 @@ module {
 
 describe('MLIR Parser - Real World Fixtures', () => {
 	it('should parse custom dialect sample', () => {
-		const fs = require('fs')
 		const samplePath = path.join(__dirname, '..', 'sample-custom-dialect.mlir')
 
 		if (!fs.existsSync(samplePath)) {
@@ -225,7 +210,9 @@ describe('MLIR Parser - Real World Fixtures', () => {
 
 describe('MLIR Parser - Error Handling', () => {
 	it('should handle empty input', () => {
-		expect(() => parseMLIR('')).toThrow()
+		const result = parseMlirWithRegex('', 'empty')
+		expect(result.graphs.length).toBe(0)
+		expect(result._metadata?.error).toBe('Empty input')
 	})
 
 	it('should handle malformed MLIR', () => {
@@ -243,22 +230,7 @@ describe('MLIR Parser - Multi-Graph Format', () => {
 		mlirContent: string,
 		filename: string = 'test-graphs',
 	) {
-		const scriptPath = path.join(
-			__dirname,
-			'..',
-			'..',
-			'scripts',
-			'parse_mlir_regex.py',
-		)
-		const pythonCmd = process.env.CONDA_DEFAULT_ENV ? 'python' : 'python3'
-
-		const resultJson = execFileSync(pythonCmd, [scriptPath, filename], {
-			input: mlirContent,
-			encoding: 'utf-8',
-			maxBuffer: 10 * 1024 * 1024,
-		})
-
-		return JSON.parse(resultJson)
+		return parseMlirWithRegex(mlirContent, filename)
 	}
 
 	it('should return graphs array for multi-function MLIR', () => {

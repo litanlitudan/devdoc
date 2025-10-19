@@ -45,30 +45,29 @@ graph TD
 
 ---
 
-## Current Approach: Direct Python Regex Parser
+## Current Approach: TypeScript Regex Parser
 
-**Location**: `scripts/parse_mlir.py`
+**Location**: `lib/mlir-regex-parser.ts`
 
 **How it works**:
-1. TypeScript calls Python script with MLIR content via stdin
-2. Python uses regex to extract operations, inputs, outputs
-3. Constructs Model Explorer GraphNode structures directly
-4. Returns JSON graph via stdout
+1. `lib/mlir-to-graph.ts` streams MLIR text into the TypeScript fallback when the native binary is unavailable.
+2. Regex helpers extract operations, inputs, outputs, and SSA dependencies.
+3. The parser constructs Model Explorer graph structures (nodes, metadata, overlays) directly in TypeScript.
+4. JSON is returned synchronously to the CLI.
 
 **Benefits**:
-- ✅ **Universal dialect support**: Treats all MLIR operations uniformly
-- ✅ **Zero external dependencies**: Python 3.9+ only
-- ✅ **In-memory processing**: No file I/O overhead
-- ✅ **Easy distribution**: Ships with npm package
-- ✅ **Direct control**: Can customize parsing logic
-- ✅ **Preserves SSA order**: Proper edge connections
+- ✅ **Universal dialect support**: Treats all MLIR operations uniformly.
+- ✅ **Zero external dependencies**: Ships with Devdoc; Node.js runtime only.
+- ✅ **Deterministic styling**: Generates dialect-specific colors and edge overlays.
+- ✅ **Easy distribution**: Bundled inside the npm package.
+- ✅ **Preserves SSA order**: Proper edge connections by parsing operands/results.
 
 **Limitations**:
-- ⚠️ Regex parsing may miss complex MLIR syntax edge cases
-- ⚠️ No official MLIR semantic validation
-- ⚠️ Limited to graph topology (sufficient for visualization)
+- ⚠️ Regex parsing may miss complex MLIR syntax edge cases.
+- ⚠️ No official MLIR semantic validation.
+- ⚠️ Limited to graph topology (sufficient for visualization).
 
-**Performance**: Adequate for files up to 100MB
+**Performance**: Adequate for files up to 100MB.
 
 ---
 

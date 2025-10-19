@@ -129,12 +129,7 @@ EOF
 
 ## Integration with devdoc
 
-The parser is automatically integrated via `scripts/parse_mlir_cpp.py`:
-
-```python
-# Tries C++ parser first, falls back to regex parser if not available
-python3 scripts/parse_mlir_cpp.py <filename> < model.mlir > graph.json
-```
+Devdoc automatically invokes the native parser from `lib/mlir-to-graph.ts`. When the compiled binary is present, the CLI streams MLIR through the C++ executable; otherwise it falls back to the built-in TypeScript regex parser. No Python shim is required.
 
 ## Troubleshooting
 

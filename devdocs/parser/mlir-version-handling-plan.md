@@ -98,7 +98,7 @@ def select_parser_binary(requested: Optional[str], detected: Optional[str]) -> s
 
 ### Tier 4 — Legacy Fallback (Always-On)
 
-- If all native attempts fail (missing dialect libs, fatal parse errors), fall back to `parse_mlir_regex.py` with a prominent warning.
+- If all native attempts fail (missing dialect libs, fatal parse errors), fall back to the TypeScript regex parser (`lib/mlir-regex-parser.ts`) with a prominent warning.
 - Include failure context in warning output (binary attempted, error message, suggested upgrade).
 
 ## Implementation Phases

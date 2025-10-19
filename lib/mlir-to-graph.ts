@@ -1,131 +1,153 @@
 /**
  * MLIR to Model Explorer Graph Converter
  *
- * This module converts MLIR (Multi-Level Intermediate Representation) text
- * into a graph format compatible with Google's Model Explorer visualization tool.
- *
- * **Parser Implementation:**
- * - **Primary**: C++ MLIR context-based parser (if built) - Implements the documented
- *   universal MLIR parser pipeline with proper dialect registration, ModuleOp parsing,
- *   and full region traversal
- * - **Fallback**: Python regex-based parser - Lightweight, dependency-free parsing
- *   that handles arbitrary MLIR dialects as generic operations
- *
- * The C++ parser provides better accuracy and performance but requires building
- * LLVM/MLIR. See `src/mlir/BUILD.md` for build instructions.
- *
- * Note: Requires Python 3.9+. C++ parser is optional but recommended.
+ * Attempts to use the native C++ MLIR parser when available, falling back to a
+ * TypeScript regex-based implementation when the native binary is missing or
+ * fails. The return value conforms to Model Explorer's graph schema.
  */
 
-import { execFileSync } from 'child_process'
-import { fileURLToPath } from 'url'
+import { spawnSync } from 'child_process'
+import { existsSync } from 'fs'
 import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
+import { ModelExplorerGraph, ModelExplorerGraphs } from './mlir-graph-types.js'
+import { parseMlirWithRegex } from './mlir-regex-parser.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-export interface GraphNode {
-	id: string
-	label: string
-	namespace: string
-	attrs: Array<{ key: string; value: string }>
-	outputsMetadata?: Array<{
-		id: string
-		attrs: Array<{ key: string; value: string }>
-	}>
-	inputsMetadata?: Array<{
-		id: string
-		attrs: Array<{ key: string; value: string }>
-	}>
-	incomingEdges: Array<{
-		sourceNodeId: string
-		sourceNodeOutputId?: string
-		targetNodeInputId?: string
-	}>
-	subgraphIds?: string[]
+function candidateCppParsers(): string[] {
+	const repoRoot = join(__dirname, '..', '..')
+	return [
+		join(repoRoot, 'src', 'mlir', 'build', 'mlir_parser'),
+		join(repoRoot, 'src', 'mlir', 'mlir_parser'),
+	]
 }
 
-export interface ModelExplorerGraph {
-	id: string
-	nodes: GraphNode[]
+function findCppParser(): string | null {
+	for (const candidate of candidateCppParsers()) {
+		if (existsSync(candidate)) {
+			return candidate
+		}
+	}
+
+	const delimiter = process.platform === 'win32' ? ';' : ':'
+	const systemPath = process.env.PATH ?? ''
+	for (const pathEntry of systemPath.split(delimiter)) {
+		if (!pathEntry) continue
+		const candidate = join(pathEntry, 'mlir_parser')
+		if (existsSync(candidate)) {
+			return candidate
+		}
+	}
+
+	return null
 }
 
-export interface ModelExplorerGraphs {
-	graphs: ModelExplorerGraph[]
+function runCppParser(
+	parserPath: string,
+	mlirContent: string,
+	filename: string,
+): { status: number | null; stdout: string; stderr: string } {
+	const result = spawnSync(parserPath, [filename], {
+		input: mlirContent,
+		encoding: 'utf-8',
+		maxBuffer: 50 * 1024 * 1024,
+	})
+
+	if (result.error) {
+		throw result.error
+	}
+
+	return {
+		status: result.status,
+		stdout: result.stdout ?? '',
+		stderr: result.stderr ?? '',
+	}
+}
+
+function parseWithCpp(
+	parserPath: string,
+	mlirContent: string,
+	filename: string,
+): ModelExplorerGraphs | null {
+	const { status, stdout, stderr } = runCppParser(
+		parserPath,
+		mlirContent,
+		filename,
+	)
+
+	if (status === 0) {
+		try {
+			const parsed = JSON.parse(stdout) as ModelExplorerGraphs
+			if ((parsed as any)?.error) {
+				console.warn(
+					`⚠️ C++ parser reported error: ${(parsed as any).message ?? (parsed as any).error}`,
+				)
+				return null
+			}
+			console.log(
+				`✓ C++ MLIR context parser successful (${parsed.graphs.length} graphs)`,
+			)
+			return parsed
+		} catch (err) {
+			console.warn(
+				'⚠️ C++ parser returned invalid JSON. Falling back to TypeScript parser.',
+				err,
+			)
+			return null
+		}
+	}
+
+	console.warn(`⚠️ C++ parser exited with status ${status}. stderr: ${stderr}`)
+	try {
+		const parsed = JSON.parse(stdout) as Record<string, unknown>
+		if (parsed?.error) {
+			console.warn(`Parser message: ${parsed.message ?? parsed.error}`)
+		}
+	} catch {
+		// Ignore JSON parsing failures; fallback will handle the content.
+	}
+	return null
 }
 
 /**
- * Convert MLIR text to Model Explorer graph format
- *
- * Uses C++ MLIR context-based parser if available, with automatic fallback
- * to Python regex parser. The C++ parser implements the full documented
- * pipeline with proper dialect registration and region traversal.
- *
- * Returns multi-graph format with one graph per function.
+ * Convert MLIR text to Model Explorer graph format.
  *
  * @param mlirContent The MLIR text content to parse
  * @param filename The filename to use as the base graph ID
- * @returns A graphs object containing one graph per function
- * @throws Error if Python is not available or parsing fails
+ * @returns Graph collection suitable for Model Explorer
  */
 export function convertMLIRToGraph(
 	mlirContent: string,
 	filename: string,
 ): ModelExplorerGraphs {
-	try {
-		// Path to wrapper script that tries C++ parser first, falls back to Python regex
-		// (relative to compiled JS location in dist/lib/)
-		const scriptPath = join(
-			__dirname,
-			'..',
-			'..',
-			'scripts',
-			'parse_mlir_cpp.py',
-		)
+	const parserPath = findCppParser()
 
-		// Run Python MLIR parser with filename as argument
-		// Use 'python' in conda environment, otherwise 'python3'
-		const pythonCmd = process.env.CONDA_DEFAULT_ENV ? 'python' : 'python3'
-		const resultJson = execFileSync(pythonCmd, [scriptPath, filename], {
-			input: mlirContent,
-			maxBuffer: 50 * 1024 * 1024, // 50MB max buffer
-			timeout: 30000, // 30 second timeout
-			encoding: 'utf-8',
-		})
-
-		const result = JSON.parse(resultJson)
-
-		// Check if parsing succeeded
-		if (result.error) {
-			// Show parsing error directly
-			throw new Error(result.message)
-		}
-
-		console.log(
-			`✓ Python MLIR parsing successful (${result.graphs?.length || 0} graphs)`,
-		)
-		return result as ModelExplorerGraphs
-	} catch (error: any) {
-		// Provide helpful error messages for system-level errors
-		if (error.code === 'ENOENT') {
-			throw new Error(
-				'Python not found. Please install Python 3.9+ and ensure it is in your PATH.',
+	if (parserPath) {
+		try {
+			const result = parseWithCpp(parserPath, mlirContent, filename)
+			if (result) {
+				return result
+			}
+		} catch (error) {
+			console.warn(
+				`⚠️ Failed to execute C++ parser at ${parserPath}:`,
+				error,
+				'\nFalling back to TypeScript parser.',
 			)
-		} else if (
-			error.message?.includes('INVALID_ARGUMENT') ||
-			error.message?.includes('Failed to parse')
-		) {
-			throw error // Re-throw parsing errors directly (these are MLIR syntax errors)
-		} else if (error.status !== undefined) {
-			throw new Error(`Python MLIR parser failed (exit code ${error.status}).`)
-		} else {
-			throw new Error(`MLIR parsing error: ${error.message}`)
 		}
+	} else {
+		console.warn(
+			'ℹ️ C++ MLIR parser not found. Falling back to TypeScript regex parser.',
+		)
 	}
+
+	return parseMlirWithRegex(mlirContent, filename)
 }
 
 /**
- * Create a minimal test graph for debugging
+ * Create a minimal test graph for debugging.
  * @param filename The filename to use as the graph ID
  * @returns A minimal graph with 3 connected nodes
  */

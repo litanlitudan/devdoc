@@ -6,27 +6,22 @@ This directory contains a C++ implementation of the MLIR parser that aligns with
 
 ```mermaid
 flowchart TD
-    TS[TypeScript Interface<br/>lib/mlir-to-graph.ts]
-    PY[Python Wrapper & Router<br/>scripts/parse_mlir_cpp.py]
+    CLI[Devdoc CLI]
+    ROUTER[Parser Router<br/>lib/mlir-to-graph.ts]
+    TRY{C++ Parser<br/>Available?}
+    EXEC[Execute mlir_parser binary]
+    FALLBACK[Use TS Regex Parser<br/>lib/mlir-regex-parser.ts]
+    OUTPUT[Model Explorer Graph Format]
 
-    TS -->|Execute| PY
-
-    PY --> TRY{C++ Parser<br/>Available?}
-
-    TRY -->|Yes| EXEC[Execute mlir_parser binary]
-    TRY -->|No| FALLBACK[Use Regex Parser<br/>parse_mlir_regex.py]
-
+    CLI --> ROUTER --> TRY
+    TRY -->|Yes| EXEC
+    TRY -->|No| FALLBACK
     EXEC --> SUCCESS{Success?}
-    SUCCESS -->|Yes| JSON1[Return JSON Graph]
-    SUCCESS -->|No| FALLBACK
+    SUCCESS -->|Yes| OUTPUT
+    SUCCESS -->|No| FALLBACK --> OUTPUT
 
-    FALLBACK --> JSON2[Return JSON Graph]
-
-    JSON1 --> OUTPUT[Model Explorer Graph Format]
-    JSON2 --> OUTPUT
-
-    style TS fill:#e1f5ff
-    style PY fill:#fff4e1
+    style CLI fill:#e1f5ff
+    style ROUTER fill:#fff4e1
     style EXEC fill:#e8f5e9
     style FALLBACK fill:#fff3e0
     style OUTPUT fill:#f3e5f5
@@ -46,13 +41,13 @@ graph LR
         CPP7["⚡ 10-100x faster"]
     end
 
-    subgraph REGEX["Regex Parser (parse_mlir_regex.py)"]
+    subgraph REGEX["TypeScript Regex Parser (lib/mlir-regex-parser.ts)"]
         REG1["✅ Universal dialect support"]
-        REG2["✅ No dependencies"]
-        REG3["⚠️ Limited accuracy"]
+        REG2["✅ No external dependencies"]
+        REG3["⚠️ Best-effort accuracy"]
         REG4["⚠️ No normalization"]
-        REG5["⚠️ Sequential counters"]
-        REG6["📦 Python 3.9+ only"]
+        REG5["✅ Deterministic coloring & overlays"]
+        REG6["📦 Ships with Devdoc"]
     end
 
     style CPP fill:#e8f5e9
@@ -67,11 +62,11 @@ graph LR
 | **Dialect Support** | ✅ Registered + unregistered dialects     | ✅ All dialects as generic ops |
 | **Parsing Method**  | ✅ Parse to ModuleOp AST                  | ⚠️ Regex pattern matching      |
 | **Verification**    | ✅ Full IR verification                   | ❌ No verification             |
-| **Region Handling** | ✅ Full region traversal                  | ⚠️ Basic detection only        |
+| **Region Handling** | ✅ Full region traversal                  | ⚠️ Namespace heuristics        |
 | **Normalization**   | 🚧 VHLO→StableHLO (planned)               | ❌ No normalization            |
-| **Stable IDs**      | 🚧 CreateUniqueOpNamesPass (planned)      | ⚠️ Sequential counters         |
+| **Stable IDs**      | 🚧 CreateUniqueOpNamesPass (planned)      | ⚠️ Location-based labels       |
 | **Build Required**  | ✅ Requires LLVM/MLIR                     | ❌ No build needed             |
-| **Dependencies**    | LLVM, MLIR, nlohmann/json                 | None (Python 3.9+)             |
+| **Dependencies**    | LLVM, MLIR, nlohmann/json                 | None (TypeScript)              |
 | **Performance**     | ⚡ 10-100x faster                         | Standard                       |
 | **Accuracy**        | ✅ Full IR accuracy                       | ⚠️ Best-effort                 |
 
@@ -121,10 +116,10 @@ graph LR
    - Tensor shape metadata
    - See `mlir_parser.cpp:157-305`
 
-9. **Python Integration**
-   - Wrapper script with automatic fallback
-   - JSON error handling
-   - See `scripts/parse_mlir_cpp.py`
+9. **TypeScript Integration**
+   - `lib/mlir-to-graph.ts` routes between C++ and TypeScript parsers
+   - `lib/mlir-regex-parser.ts` provides the built-in fallback implementation
+   - JSON schema aligns with Model Explorer expectations
 
 ### 🚧 In Progress / Planned
 
@@ -298,6 +293,6 @@ When adding features to the C++ parser:
 
 - Design Document: `devdocs/parser/universal-mlir-parser-design.md`
 - Build Instructions: `BUILD.md`
-- Python Wrapper: `scripts/parse_mlir_cpp.py`
-- Regex Parser: `scripts/parse_mlir_regex.py`
-- TypeScript Interface: `lib/mlir-to-graph.ts`
+- Parser Router: `lib/mlir-to-graph.ts`
+- TypeScript Regex Parser: `lib/mlir-regex-parser.ts`
+- C++ Parser: `mlir_parser.cpp`
