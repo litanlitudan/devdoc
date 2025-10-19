@@ -28,20 +28,17 @@ import hashlib
 from typing import Dict, List, Any, Tuple, Optional
 from dataclasses import dataclass, field, asdict
 
-
 @dataclass
 class KeyValue:
     """Key-value pair for attributes."""
     key: str
     value: str
 
-
 @dataclass
 class MetadataItem:
     """Metadata for inputs/outputs."""
     id: str
     attrs: List[KeyValue] = field(default_factory=list)
-
 
 @dataclass
 class IncomingEdge:
@@ -50,7 +47,6 @@ class IncomingEdge:
     sourceNodeOutputId: str
     targetNodeInputId: str
 
-
 @dataclass
 class GraphNodeStyle:
     """Style for a graph node."""
@@ -58,7 +54,6 @@ class GraphNodeStyle:
     borderColor: str = ""
     textColor: str = ""
     borderWidth: float = 1.2
-
 
 @dataclass
 class GraphNode:
@@ -73,14 +68,12 @@ class GraphNode:
     subgraphIds: List[str] = field(default_factory=list)
     style: Optional[GraphNodeStyle] = None
 
-
 @dataclass
 class EdgeData:
     """Edge in an overlay."""
     sourceNodeId: str
     targetNodeId: str
     label: str = ""
-
 
 @dataclass
 class EdgeOverlay:
@@ -91,7 +84,6 @@ class EdgeOverlay:
     edgeWidth: int = 2
     edgeLabelFontSize: float = 7.5
 
-
 @dataclass
 class EdgeOverlaysData:
     """Edge overlays task data."""
@@ -99,12 +91,10 @@ class EdgeOverlaysData:
     name: str = ""
     overlays: List[EdgeOverlay] = field(default_factory=list)
 
-
 @dataclass
 class TasksData:
     """Optional tasks data for edge overlays and additional metadata."""
     edgeOverlaysDataListLeftPane: List[EdgeOverlaysData] = field(default_factory=list)
-
 
 @dataclass
 class Graph:
@@ -113,12 +103,10 @@ class Graph:
     nodes: List[GraphNode] = field(default_factory=list)
     tasksData: TasksData = field(default_factory=TasksData)
 
-
 @dataclass
 class ModelExplorerGraphs:
     """Top-level structure containing multiple graphs."""
     graphs: List[Graph] = field(default_factory=list)
-
 
 @dataclass
 class MLIROperation:
@@ -130,7 +118,6 @@ class MLIROperation:
     result_types: List[str]  # Result types like "tensor<2x3xf32>"
     regions: List[str] = field(default_factory=list)  # Nested region contents (text)
     namespace: str = ""  # Hierarchical namespace path for Model Explorer layers
-
 
 def extract_ssa_values(text: str) -> List[str]:
     """
@@ -146,7 +133,6 @@ def extract_ssa_values(text: str) -> List[str]:
     # Stops at: brackets, commas, colons, whitespace (unless part of identifier)
     ssa_pattern = re.compile(r'[%@]\w+')
     return ssa_pattern.findall(text)
-
 
 def extract_regions_from_line(mlir_line: str) -> Tuple[str, List[str]]:
     """
@@ -217,7 +203,6 @@ def extract_regions_from_line(mlir_line: str) -> Tuple[str, List[str]]:
 
     return ''.join(result_parts), regions
 
-
 def parse_mlir_operations(mlir_content: str) -> List[MLIROperation]:
     """
     Parse MLIR text format to extract operations.
@@ -231,12 +216,15 @@ def parse_mlir_operations(mlir_content: str) -> List[MLIROperation]:
     IMPORTANT: Operations are returned in their original order to preserve SSA dependencies.
     """
     # Pattern 1: Quoted operations WITH results: %result = "dialect.op"(%inputs) {attrs} : type
+    # Supports both {attrs} and <{attrs}> syntax
+    # Supports multiple attribute blocks: <{...}> {...}
+    # Handles trailing location information: loc(...) or loc(#locN)
     quoted_with_result_pattern = re.compile(
         r'(%[\w]+(?:,\s*%[\w]+)*)\s*=\s*'  # outputs
         r'"([^"]+)"\s*'  # operation
         r'\(([^)]*)\)\s*'  # inputs
-        r'(?:\{([^}]*)\})?\s*'  # attributes (optional)
-        r':\s*(?:\([^)]+\)\s*->\s*)?(.+?)(?:\s|$)',  # result type
+        r'((?:<?\{[^}]*\}>?\s*)*)'  # attributes (optional, supports multiple blocks)
+        r':\s*(?:\([^)]+\)\s*->\s*)?(.+?)(?:\s+loc\(|$)',  # result type (stops at loc(...) or end of line)
         re.MULTILINE
     )
 
@@ -251,11 +239,14 @@ def parse_mlir_operations(mlir_content: str) -> List[MLIROperation]:
     )
 
     # Pattern 3: Quoted operations WITHOUT results: "dialect.op"(%inputs) {attrs} : type
+    # Supports both {attrs} and <{attrs}> syntax
+    # Supports multiple attribute blocks: <{...}> {...}
+    # Handles trailing location information: loc(...) or loc(#locN)
     quoted_no_result_pattern = re.compile(
         r'^\s*"([\w]+\.[\w]+)"\s*'  # operation
         r'\(([^)]*)\)\s*'  # inputs
-        r'(?:\{([^}]*)\})?\s*'  # attributes (optional)
-        r'(?::\s*(.+?))?(?:\s|$)',  # optional type
+        r'((?:<?\{[^}]*\}>?\s*)*)'  # attributes (optional, supports multiple blocks)
+        r'(?::\s*(.+?))?(?:\s+loc\(|$)',  # optional type (stops at loc(...) or end of line)
         re.MULTILINE
     )
 
@@ -458,7 +449,6 @@ def parse_mlir_operations(mlir_content: str) -> List[MLIROperation]:
 
     return operations
 
-
 @dataclass
 class MLIRFunction:
     """Parsed MLIR function."""
@@ -468,7 +458,6 @@ class MLIRFunction:
     operations: List[MLIROperation]
     body_start: int  # Character position where function body starts
     body_end: int  # Character position where function body ends
-
 
 def assign_namespaces_to_operations(mlir_content: str, operations: List[MLIROperation], base_namespace: str = "") -> None:
     """
@@ -561,7 +550,6 @@ def assign_namespaces_to_operations(mlir_content: str, operations: List[MLIROper
         if not op.namespace:
             op.namespace = base_namespace
 
-
 def parse_functions(mlir_content: str) -> List[MLIRFunction]:
     """
     Parse all functions from MLIR content.
@@ -571,15 +559,51 @@ def parse_functions(mlir_content: str) -> List[MLIRFunction]:
 
     # Pattern to find all function definitions from any dialect (*.func)
     # Matches: func.func, gpu.func, spirv.func, llvm.func, async.func, etc.
+    # Note: We only match up to the opening paren, then manually parse to handle nested parens in loc(...)
     func_pattern = re.compile(
-        r'(?:\w+\.func)\s+@(\w+)\s*\(([^)]*)\)[^{]*\{',
+        r'(?:\w+\.func)\s+@(\w+)\s*\(',
         re.MULTILINE
     )
 
     for func_match in func_pattern.finditer(mlir_content):
         func_name = func_match.group(1)
-        inputs_str = func_match.group(2)
-        func_start = func_match.end()  # Start of function body
+
+        # Manually extract inputs by counting parentheses (handles nested loc(...))
+        paren_start = func_match.end() - 1  # Position of opening (
+        paren_count = 1
+        pos = func_match.end()
+
+        while pos < len(mlir_content) and paren_count > 0:
+            if mlir_content[pos] == '(':
+                paren_count += 1
+            elif mlir_content[pos] == ')':
+                paren_count -= 1
+            pos += 1
+
+        if paren_count == 0:
+            inputs_str = mlir_content[paren_start + 1:pos - 1]
+        else:
+            inputs_str = ""
+
+        # Find the function body start by looking for the last { before the first operation
+        # This handles both "func @name() {" and "func @name() attributes {...} {"
+        search_start = pos  # Start searching after the closing ) of arguments
+
+        # Find the opening brace for the function body
+        # Skip any attributes blocks by finding the last { before the first %
+        remaining = mlir_content[search_start:]
+
+        # Find where the function body actually starts (after all attributes)
+        # Look for the pattern: possible attributes block(s) followed by {
+        body_start_match = re.search(r'\{\s*(?=%|\s*func\.return|\s*$)', remaining)
+        if not body_start_match:
+            # Fallback: just find the first {
+            body_start_match = re.search(r'\{', remaining)
+
+        if not body_start_match:
+            continue
+
+        func_start = search_start + body_start_match.end()  # Start of function body (after the {)
 
         # Find the corresponding closing brace
         brace_count = 1
@@ -602,7 +626,10 @@ def parse_functions(mlir_content: str) -> List[MLIRFunction]:
         # Parse inputs
         inputs = []
         if inputs_str.strip():
-            input_pattern = re.compile(r'(%\w+)\s*:\s*([^,)]+)')
+            # Pattern matches: %argN: type [loc(...)]
+            # Captures type and strips optional location annotation
+            # Stops at: loc(...), comma, paren, or end of string
+            input_pattern = re.compile(r'(%\w+)\s*:\s*([^,)]+?)(?:\s+loc\(|,|\)|$)')
             for input_match in input_pattern.finditer(inputs_str):
                 name = input_match.group(1)
                 type_str = input_match.group(2).strip()
@@ -659,7 +686,6 @@ def parse_functions(mlir_content: str) -> List[MLIRFunction]:
 
     return functions
 
-
 def parse_function_outputs(mlir_content: str) -> List[str]:
     """
     Parse function return values from MLIR.
@@ -678,7 +704,6 @@ def parse_function_outputs(mlir_content: str) -> List[str]:
     outputs_str = match.group(1).strip()
     outputs = [s.strip() for s in outputs_str.split(',') if s.strip()]  # Filter out empty strings
     return outputs
-
 
 def extract_location_info(mlir_line: str) -> str:
     """
@@ -702,7 +727,6 @@ def extract_location_info(mlir_line: str) -> str:
         return "_".join(names) if names else ""
 
     return ""
-
 
 # Extensibility Hooks: Dialect-specific customization points
 class DialectHooks:
@@ -770,7 +794,6 @@ class DialectHooks:
         region_keywords = ['while', 'if', 'cond', 'reduce', 'map', 'scan', 'loop', 'scf.']
         return any(keyword in op_type.lower() for keyword in region_keywords)
 
-
 def remove_dense_constant_values(mlir_content: str) -> Tuple[str, int]:
     """
     Remove all dense constant values from MLIR, preserving only tensor shape information.
@@ -821,7 +844,6 @@ def remove_dense_constant_values(mlir_content: str) -> Tuple[str, int]:
 
     return processed_content, replaced_count
 
-
 def detect_function_calls(operations: List[MLIROperation], function_name: str = "") -> Dict[str, List[str]]:
     """
     Detect function calls in operations and return mapping of node_id to called function names.
@@ -849,7 +871,6 @@ def detect_function_calls(operations: List[MLIROperation], function_name: str = 
 
     return calls
 
-
 UNKNOWN_DIALECT_PALETTE: List[Tuple[str, str]] = [
     ("#E3F2FD", "#0D47A1"),  # Blue
     ("#E8F5E9", "#1B5E20"),  # Green
@@ -864,7 +885,6 @@ UNKNOWN_DIALECT_PALETTE: List[Tuple[str, str]] = [
 
 _unknown_dialect_color_cache: Dict[str, Tuple[str, str]] = {}
 
-
 def get_unknown_dialect_color(dialect: str) -> Tuple[str, str]:
     """
     Deterministically assign colors to unknown/unregistered dialects.
@@ -878,7 +898,6 @@ def get_unknown_dialect_color(dialect: str) -> Tuple[str, str]:
     color_pair = UNKNOWN_DIALECT_PALETTE[palette_index]
     _unknown_dialect_color_cache[dialect] = color_pair
     return color_pair
-
 
 def get_dialect_color(op_type: str) -> Tuple[str, str]:
     """
@@ -925,7 +944,6 @@ def get_dialect_color(op_type: str) -> Tuple[str, str]:
 
     # Return dialect-specific colors or deterministic fallback for unknown dialects
     return dialect_colors.get(dialect, get_unknown_dialect_color(dialect))
-
 
 def generate_edge_overlays_for_graph(graph: Graph, function_name: str) -> EdgeOverlaysData:
     """
@@ -1029,7 +1047,6 @@ def generate_edge_overlays_for_graph(graph: Graph, function_name: str) -> EdgeOv
         name=f"Tensor Flow - {function_name}",
         overlays=overlays
     )
-
 
 def create_graph_for_function(
     function: MLIRFunction,
@@ -1169,7 +1186,6 @@ def create_graph_for_function(
 
     return graph, node_id_counter + len(nodes)
 
-
 def create_model_explorer_graphs(
     functions: List[MLIRFunction]
 ) -> ModelExplorerGraphs:
@@ -1190,7 +1206,6 @@ def create_model_explorer_graphs(
         graphs.append(graph)
 
     return ModelExplorerGraphs(graphs=graphs)
-
 
 def main():
     try:
@@ -1303,7 +1318,6 @@ def main():
             "message": str(e)
         }), file=sys.stderr)
         return 1
-
 
 if __name__ == "__main__":
     sys.exit(main())
