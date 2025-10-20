@@ -345,26 +345,39 @@ This script will automatically check and install ONNX if needed. MLIR parsing wo
 
 ### MCP Server Integration & Browser Coordination
 
-**IMPORTANT:** When using dev3000 MCP server for browser automation and debugging, ensure chrome-devtools MCP connects to the same Chrome instance.
+**IMPORTANT:** Devdoc integrates with dev3000 MCP server for browser automation, error detection, and debugging. See [dev3000 MCP Integration Guide](docs/dev3000-mcp-integration.md) for complete documentation.
 
-**dev3000 Browser Management:**
+**Quick Start with dev3000:**
 
 ```bash
-# Start dev3000 (provides browser automation and monitoring)
-npx dev3000 --port 8642
+# Standard development mode with full MCP integration
+make dev
 
-# This will display:
-# - App: http://localhost:8642
-# - MCP: http://localhost:3684
-# - Logs: http://localhost:3684/logs?project=devdoc
+# This will:
+# - Kill any processes on port 8642
+# - Build the project
+# - Start dev3000 with MCP server on port 3684
+# - Launch Chrome browser with monitoring
+# - Serve devdoc on http://localhost:8642
+
+# Other development modes:
+make dev-debug        # Debug logging enabled
+make dev-no-browser   # Servers only (no browser launch)
+make dev-tail         # With log tailing
 ```
+
+**dev3000 MCP Server Endpoints:**
+
+- **MCP Protocol**: `http://localhost:3684`
+- **Logs UI**: `http://localhost:3684/logs?project=devdoc`
+- **App Server**: `http://localhost:8642`
 
 **Chrome DevTools Protocol (CDP) Coordination:**
 
 When both dev3000 and chrome-devtools MCP servers are available:
 
 - **dev3000** manages the Chrome instance via CDP
-- **chrome-devtools MCP** should connect to the same browser instance
+- **chrome-devtools MCP** connects to the same browser instance
 - Coordination happens automatically through CDP URL sharing
 - This prevents browser conflicts and ensures consistent state
 
@@ -378,20 +391,13 @@ The system automatically routes browser actions to the optimal MCP server:
 - **JavaScript evaluation** → chrome-devtools MCP (enhanced debugging)
 - **Scrolling & typing** → dev3000 fallback (specialized actions)
 
-**Debugging and Error Detection:**
+**Key Features:**
 
-Use dev3000's capabilities for:
+- ✅ Real-time error monitoring and detection
+- ✅ Performance metrics and CLS (Cumulative Layout Shift) tracking
+- ✅ Browser console log capture
+- ✅ Visual diff analysis for layout debugging
+- ✅ Automatic browser coordination with chrome-devtools MCP
+- ✅ Multiple development modes (standard, debug, servers-only, tail)
 
-- Real-time error monitoring and detection
-- Performance metrics and CLS (Cumulative Layout Shift) tracking
-- Browser console log capture
-- Visual diff analysis for layout debugging
-
-**Configuration Verification:**
-
-To verify proper MCP coordination:
-
-1. Check that dev3000 is running and showing MCP endpoint
-2. Confirm chrome-devtools MCP is configured in Claude Code settings
-3. Browser actions should automatically use the appropriate server
-4. Both servers share the same Chrome instance (no duplicate browsers)
+For detailed documentation, troubleshooting, and advanced configuration, see [docs/dev3000-mcp-integration.md](docs/dev3000-mcp-integration.md).
