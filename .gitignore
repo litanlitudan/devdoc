@@ -21,3 +21,4 @@ devdocs/SIGNALS.md
 .beads/
 devdocs/logs
 src/mlir/build/
+.well-known/
