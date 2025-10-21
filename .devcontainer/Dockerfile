@@ -168,7 +168,7 @@ RUN npm install -g \
     nodemon \
     npm-check-updates \
     @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
-    openai-cli
+    @openai/codex
 
 # Default command
 CMD ["/bin/zsh"]
