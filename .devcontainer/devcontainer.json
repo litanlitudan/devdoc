@@ -68,6 +68,9 @@
 		}
 	},
 
+	// Remove old container before starting (runs on host)
+	"initializeCommand": "docker rm -f devcontainer-devdoc 2>/dev/null || true",
+
 	// Use 'postCreateCommand' to run commands after the container is created
 	"postCreateCommand": "npm install",
 
@@ -76,6 +79,9 @@
 
 	// Comment out to connect as root instead
 	"remoteUser": "dev",
+
+	// Fixed container name
+	"runArgs": ["--name", "devcontainer-devdoc"],
 
 	// Container environment variables
 	"containerEnv": {
@@ -90,10 +96,10 @@
 	// Mount the local file system
 	"mounts": [
 		// Bash history persistence (volume)
-		"source=devdoc-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
+		"source=devdoc-bashhistory,target=/commandhistory,type=volume",
 
 		// Claude Code configuration (volume)
-		"source=devdoc-claude-config-${devcontainerId},target=/home/dev/.claude,type=volume",
+		"source=devdoc-claude-config,target=/home/dev/.claude,type=volume",
 
 		// Optional: Git configuration from host (bind mount)
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/dev/.gitconfig,type=bind,consistency=cached"
