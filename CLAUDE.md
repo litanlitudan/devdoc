@@ -4,6 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+### Quick Reference - dev3000 MCP Server
+
+When running `make dev`, the dev3000 MCP server starts with the following endpoints:
+
+- **App**: http://localhost:8642 - Main application server
+- **MCP**: http://localhost:3684 - MCP protocol server
+- **Logs**: http://localhost:3684/logs?project=devdoc - Real-time logs UI
+
+See [MCP Server Integration & Browser Coordination](#mcp-server-integration--browser-coordination) section below for complete documentation.
+
 ### Development & Testing
 
 ```bash
