@@ -54,6 +54,13 @@
 #include <sstream>
 #include <memory>
 #include <vector>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
 
 #include "llvm/ADT/DenseMap.h"
 
@@ -152,6 +159,7 @@ public:
 
         // Walk all func.func operations and build graphs
         module.walk([&](func::FuncOp funcOp) {
+            currentFunctionName_ = funcOp.getSymName().str();
             auto graph = buildFunctionGraph(funcOp, functionNames);
             result["graphs"].push_back(graph);
         });
@@ -162,90 +170,88 @@ public:
 private:
     int nodeIdCounter_;
     llvm::DenseMap<Value, std::string> valueToNodeId_;
+    std::string currentFunctionName_;
 
-    /**
-     * Build graph for a single function
-     */
+    using NodeList = std::vector<json>;
+    struct SectionInfo {
+        std::string parentNamespace;
+        std::string label;
+        size_t nodeCount;
+    };
+
     json buildFunctionGraph(func::FuncOp funcOp, const std::vector<std::string> &functionNames) {
-        // IMPORTANT: Reset SSA map for each function to ensure proper scoping
         valueToNodeId_.clear();
 
-        json graph;
-        graph["id"] = funcOp.getSymName().str();
-        graph["nodes"] = json::array();
-
+        NodeList nodes;
         std::string funcName = funcOp.getSymName().str();
 
-        // Create input nodes from function arguments
         auto &entryBlock = funcOp.getBody().front();
         for (unsigned i = 0; i < entryBlock.getNumArguments(); ++i) {
             auto arg = entryBlock.getArgument(i);
             auto inputNode = createInputNode(arg, i, funcName);
-            graph["nodes"].push_back(inputNode);
-
-            // Map argument value to node ID for edge creation
+            nodes.push_back(inputNode);
             valueToNodeId_[arg] = inputNode["id"];
         }
 
-        // Process the function body region recursively
-        processRegion(funcOp.getBody(), funcName, functionNames, graph["nodes"]);
+        processRegion(funcOp.getBody(), funcName, functionNames, nodes);
 
-        // Create output nodes from return operation
         funcOp.walk([&](func::ReturnOp returnOp) {
             for (unsigned i = 0; i < returnOp.getNumOperands(); ++i) {
                 auto outputNode = createOutputNode(returnOp.getOperand(i), i, funcName);
-                graph["nodes"].push_back(outputNode);
+                nodes.push_back(outputNode);
             }
         });
+
+        size_t threshold = getLayerThreshold();
+        auto sections = applyArtificialPartitioning(nodes, threshold);
+        auto nodesWithLayers = addLayerGroupNodes(nodes, funcName, sections);
+
+        json graph;
+        graph["id"] = funcName;
+        graph["nodes"] = json::array();
+        for (const auto &node : nodesWithLayers) {
+            graph["nodes"].push_back(node);
+        }
+
+        json tasksData = generateEdgeOverlaysForGraph(nodesWithLayers, funcName);
+        if (!tasksData.is_null()) {
+            graph["tasksData"] = tasksData;
+        }
 
         return graph;
     }
 
-    /**
-     * Process a region recursively, creating nodes with proper namespaces
-     */
     void processRegion(Region &region, const std::string &namespace_,
-                       const std::vector<std::string> &functionNames, json &nodes) {
-        // Process each block in the region
+                       const std::vector<std::string> &functionNames, NodeList &nodes) {
         for (auto &block : region) {
-            // Process each operation in the block
             for (auto &op : block) {
-                // Create node for this operation
                 auto opNode = createOperationNode(&op, namespace_, functionNames);
                 nodes.push_back(opNode);
 
-                // Map operation results to node IDs for edge creation
                 for (unsigned i = 0; i < op.getNumResults(); ++i) {
                     valueToNodeId_[op.getResult(i)] = opNode["id"];
                 }
 
-                // Process nested regions if this operation has any
                 if (op.getNumRegions() > 0) {
                     std::string opLabel = opNode["label"];
                     std::string opId = opNode["id"];
 
-                    // Process each nested region
                     for (unsigned regionIdx = 0; regionIdx < op.getNumRegions(); ++regionIdx) {
                         auto &nestedRegion = op.getRegion(regionIdx);
 
-                        // Create namespace for nested region: (opLabel_id)/(region_i)
                         std::string regionNamespace = "(" + opLabel + "_" + opId + ")/(region_" +
                                                      std::to_string(regionIdx) + ")";
 
-                        // Create helper input nodes for region block arguments
                         if (!nestedRegion.empty()) {
                             auto &regionBlock = nestedRegion.front();
                             for (unsigned argIdx = 0; argIdx < regionBlock.getNumArguments(); ++argIdx) {
                                 auto arg = regionBlock.getArgument(argIdx);
                                 auto helperNode = createRegionInputNode(arg, argIdx, regionNamespace);
                                 nodes.push_back(helperNode);
-
-                                // Map region argument to helper node ID
                                 valueToNodeId_[arg] = helperNode["id"];
                             }
                         }
 
-                        // Recursively process the nested region
                         processRegion(nestedRegion, regionNamespace, functionNames, nodes);
                     }
                 }
@@ -253,9 +259,6 @@ private:
         }
     }
 
-    /**
-     * Create input node from function argument
-     */
     json createInputNode(BlockArgument arg, unsigned index, const std::string &funcName) {
         json node;
         node["id"] = funcName + "_input_" + std::to_string(index);
@@ -264,12 +267,10 @@ private:
         node["attrs"] = json::array();
         node["incomingEdges"] = json::array();
 
-        // Add input metadata
         json inputMetadata;
         inputMetadata["id"] = "0";
         inputMetadata["attrs"] = json::array();
 
-        // Add tensor shape information
         if (auto tensorType = mlir::dyn_cast<RankedTensorType>(arg.getType())) {
             json shapeAttr;
             shapeAttr["key"] = "tensor_shape";
@@ -286,9 +287,6 @@ private:
         return node;
     }
 
-    /**
-     * Create helper input node for region block arguments
-     */
     json createRegionInputNode(BlockArgument arg, unsigned index, const std::string &regionNamespace) {
         json node;
         node["id"] = regionNamespace + "_input_" + std::to_string(index);
@@ -297,7 +295,6 @@ private:
         node["attrs"] = json::array();
         node["incomingEdges"] = json::array();
 
-        // Add input metadata with tensor shape
         json inputMetadata;
         inputMetadata["id"] = "0";
         inputMetadata["attrs"] = json::array();
@@ -318,9 +315,6 @@ private:
         return node;
     }
 
-    /**
-     * Create output node from return operand
-     */
     json createOutputNode(Value value, unsigned index, const std::string &funcName) {
         json node;
         node["id"] = funcName + "_output_" + std::to_string(index);
@@ -329,11 +323,10 @@ private:
         node["attrs"] = json::array();
         node["incomingEdges"] = json::array();
 
-        // Add incoming edge from producing operation
         if (valueToNodeId_.count(value)) {
             json edge;
             edge["sourceNodeId"] = valueToNodeId_[value];
-            edge["sourceNodeOutputId"] = "0";  // Simplified
+            edge["sourceNodeOutputId"] = "0";
             edge["targetNodeInputId"] = "0";
             node["incomingEdges"].push_back(edge);
         }
@@ -341,36 +334,30 @@ private:
         return node;
     }
 
-    /**
-     * Create operation node with location-based naming and subgraph resolution
-     */
-    json createOperationNode(Operation *op, const std::string &funcName, const std::vector<std::string> &functionNames) {
+    json createOperationNode(Operation *op, const std::string &currentNamespace,
+                             const std::vector<std::string> &functionNames) {
         json node;
-        node["id"] = funcName + "_op_" + std::to_string(nodeIdCounter_++);
+        node["id"] = currentFunctionName_ + "_op_" + std::to_string(nodeIdCounter_++);
 
-        // Try to extract deterministic name from location metadata
         std::string locationName = extractLocationName(op->getLoc());
         if (!locationName.empty()) {
-            node["label"] = locationName;  // Use location-based name for determinism
+            node["label"] = locationName;
         } else {
-            node["label"] = op->getName().getStringRef().str();  // Fall back to op name
+            node["label"] = op->getName().getStringRef().str();
         }
 
-        node["namespace"] = funcName;
+        node["namespace"] = currentNamespace;
         node["attrs"] = json::array();
         node["incomingEdges"] = json::array();
-        node["subgraphIds"] = json::array();  // Initialize for function calls
+        node["subgraphIds"] = json::array();
 
-        // Populate subgraphIds for function call operations
         if (auto callOp = dyn_cast<func::CallOp>(op)) {
             std::string callee = callOp.getCallee().str();
-            // Check if callee is a known function in this module
             if (std::find(functionNames.begin(), functionNames.end(), callee) != functionNames.end()) {
                 node["subgraphIds"].push_back(callee);
             }
         }
 
-        // Add attributes
         for (auto namedAttr : op->getAttrs()) {
             json attr;
             attr["key"] = namedAttr.getName().str();
@@ -381,26 +368,23 @@ private:
             node["attrs"].push_back(attr);
         }
 
-        // Add incoming edges from operands
         for (unsigned i = 0; i < op->getNumOperands(); ++i) {
             Value operand = op->getOperand(i);
             if (valueToNodeId_.count(operand)) {
                 json edge;
                 edge["sourceNodeId"] = valueToNodeId_[operand];
-                edge["sourceNodeOutputId"] = "0";  // Simplified
+                edge["sourceNodeOutputId"] = "0";
                 edge["targetNodeInputId"] = std::to_string(i);
                 node["incomingEdges"].push_back(edge);
             }
         }
 
-        // Add output metadata
         node["outputsMetadata"] = json::array();
         for (unsigned i = 0; i < op->getNumResults(); ++i) {
             json outputMeta;
             outputMeta["id"] = std::to_string(i);
             outputMeta["attrs"] = json::array();
 
-            // Add tensor shape if available
             auto result = op->getResult(i);
             if (auto tensorType = mlir::dyn_cast<RankedTensorType>(result.getType())) {
                 json shapeAttr;
@@ -417,6 +401,233 @@ private:
 
         return node;
     }
+
+    size_t getLayerThreshold() const {
+        const char *env = std::getenv("MLIR_LAYER_THRESHOLD");
+        if (env) {
+            try {
+                size_t value = static_cast<size_t>(std::stoull(env));
+                if (value > 0) return value;
+            } catch (...) {
+            }
+        }
+        return 1000;
+    }
+
+    static std::string parentNamespaceOf(const std::string &ns) {
+        if (ns.empty()) return "";
+        auto pos = ns.find_last_of('/');
+        if (pos == std::string::npos) return "";
+        return ns.substr(0, pos);
+    }
+
+    static std::string lastSegmentOf(const std::string &ns) {
+        if (ns.empty()) return "";
+        auto pos = ns.find_last_of('/');
+        if (pos == std::string::npos) return ns;
+        return ns.substr(pos + 1);
+    }
+
+    static std::string sanitizeNamespaceForId(const std::string &ns) {
+        std::string result;
+        result.reserve(ns.size());
+        for (char c : ns) {
+            if (std::isalnum(static_cast<unsigned char>(c))) {
+                result.push_back(c);
+            } else {
+                result.push_back('_');
+            }
+        }
+        if (result.empty()) return "root";
+        return result;
+    }
+
+    static std::string humanizeSegment(const std::string &segment, const std::string &fallback) {
+        if (segment.empty()) return fallback;
+        if (segment.rfind("__section_", 0) == 0) {
+            std::string suffix = segment.substr(std::strlen("__section_"));
+            return "Section " + suffix;
+        }
+        std::string cleaned = segment;
+        if (!cleaned.empty() && cleaned.front() == '(' && cleaned.back() == ')') {
+            cleaned = cleaned.substr(1, cleaned.size() - 2);
+        }
+        if (cleaned.empty()) return fallback;
+        std::replace(cleaned.begin(), cleaned.end(), '_', ' ');
+        return cleaned;
+    }
+
+    std::map<std::string, SectionInfo> applyArtificialPartitioning(NodeList &nodes, size_t threshold) {
+        std::unordered_map<std::string, std::vector<size_t>> namespaceToIndices;
+        for (size_t i = 0; i < nodes.size(); ++i) {
+            std::string ns = nodes[i].value("namespace", "");
+            namespaceToIndices[ns].push_back(i);
+        }
+
+        std::map<std::string, SectionInfo> sections;
+
+        for (auto &entry : namespaceToIndices) {
+            const std::string &ns = entry.first;
+            auto &indices = entry.second;
+
+            std::vector<size_t> candidates;
+            for (size_t idx : indices) {
+                std::string label = nodes[idx].value("label", "");
+                if (label == "Input" || label == "Output") continue;
+                candidates.push_back(idx);
+            }
+
+            if (threshold == 0 || candidates.size() <= threshold) continue;
+
+            size_t partitions = (candidates.size() + threshold - 1) / threshold;
+            for (size_t part = 0; part < partitions; ++part) {
+                size_t start = part * threshold;
+                size_t end = std::min(start + threshold, candidates.size());
+                std::string sectionNamespace = ns.empty()
+                    ? "__section_" + std::to_string(part + 1) + "__"
+                    : ns + "/__section_" + std::to_string(part + 1) + "__";
+
+                for (size_t i = start; i < end; ++i) {
+                    nodes[candidates[i]]["namespace"] = sectionNamespace;
+                }
+
+                sections.emplace(sectionNamespace, SectionInfo{
+                    ns,
+                    "Section " + std::to_string(part + 1),
+                    end - start
+                });
+            }
+        }
+
+        return sections;
+    }
+
+    NodeList addLayerGroupNodes(const NodeList &inputNodes,
+                                const std::string &rootNamespace,
+                                const std::map<std::string, SectionInfo> &sections) {
+        NodeList result = inputNodes;
+        std::set<std::string> namespaceSet;
+
+        for (const auto &node : inputNodes) {
+            std::string ns = node.value("namespace", "");
+            if (!ns.empty()) namespaceSet.insert(ns);
+        }
+        if (!rootNamespace.empty()) namespaceSet.insert(rootNamespace);
+
+        std::set<std::string> expandedNamespaces;
+        for (const auto &ns : namespaceSet) {
+            std::string current = ns;
+            while (!current.empty()) {
+                expandedNamespaces.insert(current);
+                current = parentNamespaceOf(current);
+            }
+        }
+        if (!rootNamespace.empty()) expandedNamespaces.insert(rootNamespace);
+
+        for (const auto &section : sections) {
+            expandedNamespaces.insert(section.first);
+        }
+
+        std::vector<std::string> sortedNamespaces(expandedNamespaces.begin(), expandedNamespaces.end());
+        std::sort(sortedNamespaces.begin(), sortedNamespaces.end(), [](const std::string &a, const std::string &b) {
+            auto depth = [](const std::string &ns) {
+                return std::count(ns.begin(), ns.end(), '/');
+            };
+            int depthA = depth(a);
+            int depthB = depth(b);
+            if (depthA == depthB) return a < b;
+            return depthA < depthB;
+        });
+
+        std::unordered_set<std::string> existingIds;
+        for (const auto &node : result) {
+            existingIds.insert(node.value("id", ""));
+        }
+
+        for (const auto &ns : sortedNamespaces) {
+            std::string parent = parentNamespaceOf(ns);
+            bool isRoot = ns == rootNamespace;
+            auto sectionIt = sections.find(ns);
+            std::string segment = lastSegmentOf(ns);
+            std::string label = sectionIt != sections.end()
+                ? sectionIt->second.label + " (" + std::to_string(sectionIt->second.nodeCount) + ")"
+                : humanizeSegment(segment, isRoot ? rootNamespace : (segment.empty() ? "Layer" : segment));
+
+            std::string groupId = sanitizeNamespaceForId(ns) + "___group___";
+            if (existingIds.count(groupId)) continue;
+            existingIds.insert(groupId);
+
+            json attrs = json::array();
+            json layerAttr;
+            layerAttr["key"] = "__layer__";
+            layerAttr["value"] = "true";
+            attrs.push_back(layerAttr);
+
+            json style;
+            style["backgroundColor"] = sectionIt != sections.end() ? "#FFFDE7" : "#E3F2FD";
+            style["borderColor"] = sectionIt != sections.end() ? "#F9A825" : "#64B5F6";
+            style["borderWidth"] = sectionIt != sections.end() ? 2.0 : 1.5;
+
+            if (sectionIt != sections.end()) {
+                json attr;
+                attr["key"] = "__artificial_layer__";
+                attr["value"] = "true";
+                attrs.push_back(attr);
+
+                json countAttr;
+                countAttr["key"] = "__node_count__";
+                countAttr["value"] = std::to_string(sectionIt->second.nodeCount);
+                attrs.push_back(countAttr);
+            }
+
+            if (isRoot) {
+                json rootAttr;
+                rootAttr["key"] = "__root_layer__";
+                rootAttr["value"] = "true";
+                attrs.push_back(rootAttr);
+            }
+
+            json groupNode;
+            groupNode["id"] = groupId;
+            groupNode["label"] = label;
+            groupNode["namespace"] = parent;
+            groupNode["attrs"] = attrs;
+            groupNode["incomingEdges"] = json::array();
+            groupNode["style"] = style;
+
+            result.push_back(groupNode);
+        }
+
+        return result;
+    }
+
+    json generateEdgeOverlaysForGraph(const NodeList &nodes, const std::string &functionName) {
+        std::unordered_map<std::string, const json*> nodeById;
+        for (const auto &node : nodes) {
+            nodeById[node.value("id", "")] = &node;
+        }
+
+        std::vector<json> allEdges;
+        std::vector<json> tensorEdges;
+        std::vector<json> scalarEdges;
+
+        for (const auto &node : nodes) {
+            std::string targetId = node.value("id", "");
+            if (!node.contains("incomingEdges")) continue;
+
+            for (const auto &edge : node["incomingEdges"]) {
+                std::string sourceId = edge.value("sourceNodeId", "");
+                std::string outputId = edge.value("sourceNodeOutputId", "");
+                if (sourceId.empty()) continue;
+
+                auto it = nodeById.find(sourceId);
+                if (it == nodeById.end()) continue;
+
+                const auto *sourceNode = it->second;
+                if (!sourceNode->contains("outputsMetadata")) continue;
+
+                std::string label;
+                for (const auto &meta : (*sourceNode)["outputsMetadata"]) {
 };
 
 } // anonymous namespace
