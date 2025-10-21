@@ -1,7 +1,14 @@
 # Use Ubuntu 24.04 LTS as base image
 FROM ubuntu:24.04
 
-# Set non-interactive frontend for apt
+# Build arguments
+ARG TZ=America/Los_Angeles
+ARG CLAUDE_CODE_VERSION=latest
+ARG GIT_DELTA_VERSION=0.18.2
+ARG ZSH_IN_DOCKER_VERSION=1.2.0
+
+# Set timezone and non-interactive frontend for apt
+ENV TZ="$TZ"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
@@ -30,11 +37,26 @@ RUN apt-get update \
     curl \
     wget \
     vim \
+    nano \
     less \
     ca-certificates \
     gnupg \
     # JSON processing
     jq \
+    # Claude Code development tools
+    procps \
+    sudo \
+    fzf \
+    zsh \
+    man-db \
+    unzip \
+    gnupg2 \
+    gh \
+    iptables \
+    ipset \
+    iproute2 \
+    dnsutils \
+    aggregate \
     # Cleanup
     && apt-get autoremove -y \
     && apt-get clean -y \
@@ -49,32 +71,42 @@ RUN mkdir -p /etc/apt/keyrings \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Install git-delta for better git diffs
+RUN ARCH=$(dpkg --print-architecture) && \
+    wget "https://github.com/dandavison/delta/releases/download/${GIT_DELTA_VERSION}/git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
+    dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
+    rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
+
 # Create non-root user
 ARG USERNAME=dev
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 # Create user and group, handling cases where UID/GID might already exist
-RUN apt-get update \
-    && apt-get install -y sudo \
-    # Create group - try with the desired GID, fallback to auto-assigned GID if taken
-    && (groupadd --gid $USER_GID $USERNAME 2>/dev/null || groupadd $USERNAME) \
-    # Create user - try with the desired UID, fallback to auto-assigned UID if taken
+# Create group - try with the desired GID, fallback to auto-assigned GID if taken
+# Create user - try with the desired UID, fallback to auto-assigned UID if taken
+# Add sudo permissions
+RUN (groupadd --gid $USER_GID $USERNAME 2>/dev/null || groupadd $USERNAME) \
     && (useradd --uid $USER_UID --gid $USERNAME -m -s /bin/bash $USERNAME 2>/dev/null || \
         useradd --gid $USERNAME -m -s /bin/bash $USERNAME) \
-    # Add sudo permissions
     && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME \
-    # Cleanup
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
+    && chmod 0440 /etc/sudoers.d/$USERNAME
 
-# Install global npm packages
-RUN npm install -g \
-    typescript \
-    ts-node \
-    nodemon \
-    npm-check-updates
+# Ensure npm global directory is accessible
+RUN mkdir -p /usr/local/share/npm-global && \
+    chown -R $USERNAME:$USERNAME /usr/local/share
+
+# Persist bash history
+RUN mkdir /commandhistory \
+    && touch /commandhistory/.bash_history \
+    && chown -R $USERNAME /commandhistory
+
+# Set DEVCONTAINER environment variable
+ENV DEVCONTAINER=true
+
+# Create workspace and config directories
+RUN mkdir -p /workspace /home/$USERNAME/.claude && \
+    chown -R $USERNAME:$USERNAME /workspace /home/$USERNAME/.claude
 
 # Install Python dependencies for optional ONNX support
 # Use --break-system-packages to bypass PEP 668 externally-managed-environment protection
@@ -98,7 +130,6 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100 \
 WORKDIR /workspace
 
 # Configure git and set workspace ownership
-# Do this in a single RUN to have access to USERNAME variable
 ARG USERNAME=dev
 RUN git config --global --add safe.directory /workspace \
     && chown -R $USERNAME:$USERNAME /workspace
@@ -106,11 +137,34 @@ RUN git config --global --add safe.directory /workspace \
 # Switch to non-root user
 USER $USERNAME
 
-# Set up shell environment for dev user
-RUN echo 'alias ll="ls -lah"' >> ~/.bashrc \
-    && echo 'alias gs="git status"' >> ~/.bashrc \
-    && echo 'alias gd="git diff"' >> ~/.bashrc \
-    && echo 'export PS1="\[\033[01;32m\]\u@devcontainer\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ "' >> ~/.bashrc
+# Set up npm global directory for user
+ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
+ENV PATH=$PATH:/usr/local/share/npm-global/bin
+
+# Set default shell and editors
+ENV SHELL=/bin/zsh
+ENV EDITOR=nano
+ENV VISUAL=nano
+
+# Install zsh-in-docker with powerline10k theme and plugins
+RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v${ZSH_IN_DOCKER_VERSION}/zsh-in-docker.sh)" -- \
+    -p git \
+    -p fzf \
+    -a "source /usr/share/doc/fzf/examples/key-bindings.zsh" \
+    -a "source /usr/share/doc/fzf/examples/completion.zsh" \
+    -a "export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
+    -a "alias ll='ls -lah'" \
+    -a "alias gs='git status'" \
+    -a "alias gd='git diff'" \
+    -x
+
+# Install global npm packages
+RUN npm install -g \
+    typescript \
+    ts-node \
+    nodemon \
+    npm-check-updates \
+    @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
 # Default command
-CMD ["/bin/bash"]
+CMD ["/bin/zsh"]

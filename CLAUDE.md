@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## DevContainer Support
 
-This project includes a complete DevContainer configuration for VS Code with **full MLIR/LLVM development support**. The devcontainer provides:
+This project includes a complete DevContainer configuration for VS Code with **full MLIR/LLVM development support** and **native Claude Code integration**. The devcontainer provides:
+
+### Development Environment
 
 - Ubuntu 24.04 LTS base system
 - Node.js 20 LTS with TypeScript support
@@ -17,14 +19,36 @@ This project includes a complete DevContainer configuration for VS Code with **f
 - Non-root user with sudo access
 - Pre-configured CMAKE_PREFIX_PATH for LLVM/MLIR
 
+### Claude Code Integration
+
+- **Claude Code CLI** - Installed globally via npm (`@anthropic-ai/claude-code@latest`)
+- **Claude Code VS Code Extension** - Pre-installed for seamless integration
+- **Enhanced Shell** - Zsh with Powerline10k theme, Git plugin, and Fzf
+- **Git Delta** - Advanced git diffs with syntax highlighting
+- **Persistent Configuration** - Docker volume for Claude configs at `/home/dev/.claude/`
+- **Environment Variables** - `CLAUDE_CONFIG_DIR`, `DEVCONTAINER=true`, optimized Node.js settings
+
 **Quick Start:**
 
 1. Install [VS Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/products/docker-desktop)
 2. Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 3. Open this project in VS Code
 4. Press `F1` → "Dev Containers: Reopen in Container"
+5. Wait for the container to build (first time only)
 
-See [.devcontainer/README.md](.devcontainer/README.md) for detailed documentation.
+**Claude Configuration:**
+
+Your Claude Code configurations are stored in a **persistent Docker volume** (`devdoc-claude-config-*`) that survives container rebuilds. To add your SuperClaude framework files:
+
+```bash
+# Inside the container
+cd ~/.claude/
+# Add your COMMANDS.md, FLAGS.md, PRINCIPLES.md, etc.
+```
+
+The configuration directory is persistent across container sessions, so your settings are preserved when you rebuild or restart the container.
+
+See [.devcontainer/README.md](.devcontainer/README.md) for detailed documentation and troubleshooting.
 
 ## Commands
 

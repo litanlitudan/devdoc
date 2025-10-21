@@ -23,6 +23,42 @@ This devcontainer provides a complete development environment for the devdoc pro
   - `CMAKE_PREFIX_PATH=/usr/lib/llvm-18`
   - LLVM tools in PATH with update-alternatives
 
+### Claude Code Integration
+
+The devcontainer includes **full Claude Code integration** with the following features:
+
+**Installed Components:**
+
+- **Claude Code CLI** - Latest version installed globally via npm (`@anthropic-ai/claude-code`)
+- **Claude Code VS Code Extension** - Automatically installed in the container
+- **Enhanced Shell** - Zsh with Powerline10k theme, Git plugin, and Fzf integration
+- **Git Delta** - Better git diffs with syntax highlighting
+- **GitLens** - Advanced Git capabilities in VS Code
+
+**Configuration Management:**
+
+- **Docker Volume for Claude Config** - Persistent storage for Claude configurations at `/home/dev/.claude/`
+- **Bash History Volume** - Persistent command history across container restarts
+- **Git Configuration** - Your host `.gitconfig` is mounted for seamless Git operations
+
+**Environment Variables:**
+
+- `DEVCONTAINER=true` - Identifies container environment
+- `CLAUDE_CONFIG_DIR=/home/dev/.claude` - Claude configuration directory
+- `NODE_OPTIONS=--max-old-space-size=4096` - Increased Node.js memory for large projects
+- `LLVM_DIR=/usr/lib/llvm-18` - MLIR/LLVM toolchain location
+
+**How It Works:**
+
+Unlike bind mounts, this setup uses **Docker volumes** for Claude configuration, which provides:
+
+- ✅ **Cross-platform compatibility** - Works on macOS, Linux, and Windows
+- ✅ **No directory existence issues** - Volumes are created automatically
+- ✅ **Better performance** - Faster I/O than bind mounts on some platforms
+- ✅ **Persistent storage** - Configuration survives container rebuilds
+
+Your Claude Code configurations are stored in a named Docker volume (`devdoc-claude-config-*`) that persists across container sessions. You can add your SuperClaude framework files (COMMANDS.md, FLAGS.md, etc.) to `/home/dev/.claude/` inside the container, and they will be preserved.
+
 ## Getting Started
 
 ### Prerequisites
@@ -215,6 +251,71 @@ If ports are already in use:
 
 1. Stop conflicting services on your host machine
 2. Or modify port mappings in `.devcontainer/devcontainer.json`
+
+### Claude Code Configuration Issues
+
+If Claude Code is not working properly inside the container:
+
+1. **Verify Claude Code is installed**
+
+   Inside the container:
+
+   ```bash
+   # Check Claude Code CLI
+   which claude-code
+   # Should output: /usr/local/share/npm-global/bin/claude-code
+
+   # Check version
+   claude-code --version
+   ```
+
+2. **Check configuration directory**
+
+   ```bash
+   # Verify the Claude config directory exists
+   ls -la ~/.claude/
+   echo $CLAUDE_CONFIG_DIR
+   # Should output: /home/dev/.claude
+   ```
+
+3. **Add your SuperClaude framework files**
+
+   Inside the container, create your Claude configuration files:
+
+   ```bash
+   cd ~/.claude/
+   # Copy your SuperClaude framework files here
+   # COMMANDS.md, FLAGS.md, PRINCIPLES.md, etc.
+   ```
+
+   Or create symbolic links to your dotfiles if you have them in a different location within the container.
+
+4. **Verify Docker volumes**
+
+   On your host machine:
+
+   ```bash
+   # List Docker volumes for this project
+   docker volume ls | grep devdoc-claude-config
+   ```
+
+   To inspect a volume:
+
+   ```bash
+   docker volume inspect devdoc-claude-config-<container-id>
+   ```
+
+5. **Reset Claude configuration (if needed)**
+
+   If you need to start fresh with Claude configuration:
+
+   ```bash
+   # Remove the volume (WARNING: This deletes all Claude config data)
+   docker volume rm devdoc-claude-config-<container-id>
+
+   # Then rebuild the container
+   # In VS Code: F1 → Dev Containers: Rebuild Container
+   ```
 
 ## References
 

@@ -2,16 +2,34 @@
 	"name": "Devdoc Development",
 	"build": {
 		"dockerfile": "Dockerfile",
-		"context": ".."
+		"context": "..",
+		"args": {
+			"TZ": "${localEnv:TZ:America/Los_Angeles}",
+			"CLAUDE_CODE_VERSION": "latest",
+			"GIT_DELTA_VERSION": "0.18.2",
+			"ZSH_IN_DOCKER_VERSION": "1.2.0"
+		}
 	},
 
 	// Configure tool-specific properties
 	"customizations": {
 		"vscode": {
 			"settings": {
-				"terminal.integrated.defaultProfile.linux": "bash",
+				"terminal.integrated.defaultProfile.linux": "zsh",
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "bash",
+						"icon": "terminal-bash"
+					},
+					"zsh": {
+						"path": "zsh"
+					}
+				},
 				"editor.formatOnSave": true,
-				"editor.defaultFormatter": "dbaeumer.vscode-eslint",
+				"editor.defaultFormatter": "esbenp.prettier-vscode",
+				"editor.codeActionsOnSave": {
+					"source.fixAll.eslint": "explicit"
+				},
 				"typescript.tsdk": "node_modules/typescript/lib",
 				"files.exclude": {
 					"**/node_modules": true,
@@ -20,8 +38,10 @@
 				}
 			},
 			"extensions": [
+				"anthropic.claude-code",
 				"dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
+				"eamodio.gitlens",
 				"ms-python.python",
 				"ms-vscode.cpptools",
 				"ms-vscode.cmake-tools",
@@ -52,32 +72,34 @@
 	"postCreateCommand": "npm install",
 
 	// Use 'postStartCommand' to run commands after the container starts
-	"postStartCommand": "echo '🚀 Devdoc devcontainer ready! Run make dev to start development.'",
+	"postStartCommand": "echo '🚀 Devdoc devcontainer ready! Claude Code is installed. Run make dev to start development.'",
 
 	// Comment out to connect as root instead
 	"remoteUser": "dev",
 
-	// Features to add to the dev container
-	"features": {
-		"ghcr.io/devcontainers/features/common-utils:2": {
-			"installZsh": true,
-			"installOhMyZsh": true,
-			"upgradePackages": true
-		},
-		"ghcr.io/devcontainers/features/git:1": {
-			"version": "latest"
-		}
-	},
-
-	// Set environment variables
-	"remoteEnv": {
+	// Container environment variables
+	"containerEnv": {
 		"NODE_ENV": "development",
+		"NODE_OPTIONS": "--max-old-space-size=4096",
 		"LLVM_DIR": "/usr/lib/llvm-18",
-		"CMAKE_PREFIX_PATH": "/usr/lib/llvm-18"
+		"CMAKE_PREFIX_PATH": "/usr/lib/llvm-18",
+		"CLAUDE_CONFIG_DIR": "/home/dev/.claude",
+		"POWERLEVEL9K_DISABLE_GITSTATUS": "true"
 	},
 
 	// Mount the local file system
 	"mounts": [
+		// Bash history persistence (volume)
+		"source=devdoc-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
+
+		// Claude Code configuration (volume)
+		"source=devdoc-claude-config-${devcontainerId},target=/home/dev/.claude,type=volume",
+
+		// Optional: Git configuration from host (bind mount)
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/dev/.gitconfig,type=bind,consistency=cached"
-	]
+	],
+
+	// Workspace configuration
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
+	"workspaceFolder": "/workspace"
 }
