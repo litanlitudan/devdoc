@@ -1,0 +1,83 @@
+{
+	"name": "Devdoc Development",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": ".."
+	},
+
+	// Configure tool-specific properties
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"editor.formatOnSave": true,
+				"editor.defaultFormatter": "dbaeumer.vscode-eslint",
+				"typescript.tsdk": "node_modules/typescript/lib",
+				"files.exclude": {
+					"**/node_modules": true,
+					"**/dist": true,
+					"**/.git": true
+				}
+			},
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"ms-python.python",
+				"ms-vscode.cpptools",
+				"ms-vscode.cmake-tools",
+				"bierner.markdown-mermaid",
+				"yzhang.markdown-all-in-one"
+			]
+		}
+	},
+
+	// Use 'forwardPorts' to make ports available locally
+	"forwardPorts": [8642, 3684, 35729],
+	"portsAttributes": {
+		"8642": {
+			"label": "Devdoc App",
+			"onAutoForward": "notify"
+		},
+		"3684": {
+			"label": "MCP Server",
+			"onAutoForward": "notify"
+		},
+		"35729": {
+			"label": "LiveReload",
+			"onAutoForward": "silent"
+		}
+	},
+
+	// Use 'postCreateCommand' to run commands after the container is created
+	"postCreateCommand": "npm install",
+
+	// Use 'postStartCommand' to run commands after the container starts
+	"postStartCommand": "echo '🚀 Devdoc devcontainer ready! Run make dev to start development.'",
+
+	// Comment out to connect as root instead
+	"remoteUser": "dev",
+
+	// Features to add to the dev container
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": true,
+			"installOhMyZsh": true,
+			"upgradePackages": true
+		},
+		"ghcr.io/devcontainers/features/git:1": {
+			"version": "latest"
+		}
+	},
+
+	// Set environment variables
+	"remoteEnv": {
+		"NODE_ENV": "development",
+		"LLVM_DIR": "/usr/lib/llvm-18",
+		"CMAKE_PREFIX_PATH": "/usr/lib/llvm-18"
+	},
+
+	// Mount the local file system
+	"mounts": [
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/dev/.gitconfig,type=bind,consistency=cached"
+	]
+}

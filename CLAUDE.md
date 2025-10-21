@@ -2,6 +2,30 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## DevContainer Support
+
+This project includes a complete DevContainer configuration for VS Code with **full MLIR/LLVM development support**. The devcontainer provides:
+
+- Ubuntu 24.04 LTS base system
+- Node.js 20 LTS with TypeScript support
+- **LLVM 18 & MLIR** - Complete MLIR/LLVM toolchain pre-installed
+- Python 3 with ONNX for shape inference
+- C++ build tools (GCC, CMake, Ninja, Clang 18)
+- nlohmann-json library for C++ JSON support
+- All development dependencies pre-installed
+- Automatic port forwarding for dev3000 MCP integration
+- Non-root user with sudo access
+- Pre-configured CMAKE_PREFIX_PATH for LLVM/MLIR
+
+**Quick Start:**
+
+1. Install [VS Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/products/docker-desktop)
+2. Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+3. Open this project in VS Code
+4. Press `F1` → "Dev Containers: Reopen in Container"
+
+See [.devcontainer/README.md](.devcontainer/README.md) for detailed documentation.
+
 ## Commands
 
 ### Quick Reference - dev3000 MCP Server
