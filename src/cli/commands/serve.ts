@@ -98,11 +98,13 @@ export default class Serve extends Command {
 		const validatedServerPath = this.validateServerPath(dir, cwd)
 
 		// Build flags object compatible with existing server
-		// Disable browser opening in test environments
+		// Disable browser opening in test and development environments
 		const isTestEnv =
 			process.env.NODE_ENV === 'test' ||
 			process.env.VITEST === 'true' ||
 			typeof (globalThis as any).vi !== 'undefined'
+
+		const isDevEnv = process.env.NODE_ENV === 'development'
 
 		const serverFlags: ServerFlags = {
 			port: String(config.server.port),
@@ -114,7 +116,7 @@ export default class Serve extends Command {
 			dir: validatedServerPath,
 			$pathProvided: true,
 			$openLocation: true,
-			browser: isTestEnv ? false : undefined,
+			browser: isTestEnv || isDevEnv ? false : undefined,
 		}
 
 		try {

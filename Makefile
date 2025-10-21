@@ -152,14 +152,14 @@ dev: port-kill build
 	@echo "💡 Tip: Use Ctrl+C to stop all servers"
 	@echo ""
 	@npx dev3000 --kill-mcp 2>/dev/null || true
-	npx dev3000 --port 8642 --script start
+	NODE_ENV=development npx dev3000 --port 8642 --script start
 
 dev-debug: port-kill build
 	@echo "🐛 Starting development server with debug logging..."
 	@echo "📊 Debug mode: Detailed log output enabled (TUI disabled)"
 	@echo ""
 	@npx dev3000 --kill-mcp 2>/dev/null || true
-	npx dev3000 --port 8642 --script start --debug
+	NODE_ENV=development npx dev3000 --port 8642 --script start --debug
 
 dev-no-browser: port-kill build
 	@echo "🖥️  Starting dev3000 servers only (no browser launch)..."
@@ -167,14 +167,14 @@ dev-no-browser: port-kill build
 	@echo "💡 Navigate to http://localhost:8642 manually"
 	@echo ""
 	@npx dev3000 --kill-mcp 2>/dev/null || true
-	npx dev3000 --port 8642 --script start --servers-only
+	NODE_ENV=development npx dev3000 --port 8642 --script start --servers-only
 
 dev-tail: port-kill build
 	@echo "📜 Starting development server with log tailing..."
 	@echo "📊 Consolidated log output enabled (like tail -f)"
 	@echo ""
 	@npx dev3000 --kill-mcp 2>/dev/null || true
-	npx dev3000 --port 8642 --script start --tail
+	NODE_ENV=development npx dev3000 --port 8642 --script start --tail
 
 start: build
 	@echo "🚀 Starting server..."
