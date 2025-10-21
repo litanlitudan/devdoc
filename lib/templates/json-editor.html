@@ -152,7 +152,7 @@
 		</div>
 		<div class="header-actions">
 			<a href="{{parentDir}}" class="btn" title="Go to folder">📁 Folder</a>
-			<a href="/api/{{filePath}}" class="btn" download="{{fileName}}" title="Download JSON file">⬇ Download</a>
+			<a href="/raw/{{filePath}}" class="btn" download="{{fileName}}" title="Download JSON file">⬇ Download</a>
 		</div>
 	</header>
 
@@ -179,7 +179,7 @@
 				mainMenuBar: true,
 				navigationBar: true,
 				statusBar: true,
-				readOnly: false,
+				readOnly: true,
 				askToFormat: true,
 				escapeControlCharacters: true,
 				escapeUnicodeCharacters: false,
