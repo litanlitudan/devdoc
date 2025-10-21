@@ -22,3 +22,4 @@ devdocs/SIGNALS.md
 devdocs/logs
 src/mlir/build/
 .well-known/
+**/*.local.json

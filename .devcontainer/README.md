@@ -169,14 +169,37 @@ Edit `.devcontainer/Dockerfile` and add packages to the `apt-get install` comman
 
 ## Troubleshooting
 
+**For detailed troubleshooting, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)**
+
 ### Container Build Issues
 
 If the container fails to build:
 
-1. Check Docker is running
-2. Try rebuilding: `Dev Containers: Rebuild Container Without Cache`
-3. Check Docker disk space: `docker system df`
-4. Prune unused images: `docker system prune -a`
+1. **Check Docker is running**
+
+   ```bash
+   docker ps
+   ```
+
+2. **User creation errors (UID/GID conflicts)**
+
+   If you see errors like "exit code: 4" during build, this is typically a UID/GID conflict. The Dockerfile is configured to handle existing users gracefully. Try:
+
+   ```bash
+   # Rebuild without cache
+   Dev Containers: Rebuild Container Without Cache
+   ```
+
+3. **Check Docker disk space**
+
+   ```bash
+   docker system df
+   ```
+
+4. **Prune unused images**
+   ```bash
+   docker system prune -a
+   ```
 
 ### Permission Issues
 

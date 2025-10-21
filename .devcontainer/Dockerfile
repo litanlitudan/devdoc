@@ -54,12 +54,18 @@ ARG USERNAME=dev
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && apt-get update \
+# Create user and group, handling cases where UID/GID might already exist
+RUN apt-get update \
     && apt-get install -y sudo \
+    # Create group - try with the desired GID, fallback to auto-assigned GID if taken
+    && (groupadd --gid $USER_GID $USERNAME 2>/dev/null || groupadd $USERNAME) \
+    # Create user - try with the desired UID, fallback to auto-assigned UID if taken
+    && (useradd --uid $USER_UID --gid $USERNAME -m -s /bin/bash $USERNAME 2>/dev/null || \
+        useradd --gid $USERNAME -m -s /bin/bash $USERNAME) \
+    # Add sudo permissions
     && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
+    # Cleanup
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
@@ -71,7 +77,9 @@ RUN npm install -g \
     npm-check-updates
 
 # Install Python dependencies for optional ONNX support
-RUN pip3 install --no-cache-dir \
+# Use --break-system-packages to bypass PEP 668 externally-managed-environment protection
+# This is safe in Docker containers where we control the entire environment
+RUN pip3 install --no-cache-dir --break-system-packages \
     onnx>=1.12.0 \
     numpy
 
@@ -89,11 +97,11 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100 \
 # Set up workspace directory
 WORKDIR /workspace
 
-# Configure git to treat the workspace as safe (run as root)
-RUN git config --global --add safe.directory /workspace
-
-# Change ownership of workspace to dev
-RUN chown -R $USERNAME:$USERNAME /workspace
+# Configure git and set workspace ownership
+# Do this in a single RUN to have access to USERNAME variable
+ARG USERNAME=dev
+RUN git config --global --add safe.directory /workspace \
+    && chown -R $USERNAME:$USERNAME /workspace
 
 # Switch to non-root user
 USER $USERNAME
