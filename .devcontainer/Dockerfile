@@ -39,6 +39,7 @@ RUN apt-get update \
     vim \
     nano \
     less \
+    tmux \
     ca-certificates \
     gnupg \
     # JSON processing
